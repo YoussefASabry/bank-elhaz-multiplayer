@@ -1,0 +1,6 @@
+.aider*
+node_modules/
+dist/
+.idea/
+multiplayer/node_modules/
+multiplayer/dist/
