@@ -1,15 +1,24 @@
 {
   "name": "bank-elhaz",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "module",
-  "description": "Bank El Haz board game engine",
+  "description": "Bank El Haz — online multiplayer board game",
   "scripts": {
-    "dev": "vite",
-    "preview": "vite preview",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "node scripts/dev.js",
+    "server": "node server/index.js",
+    "client": "vite",
+    "build": "vite build",
+    "start": "node server/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
-  "private": true,
+  "dependencies": {
+    "express": "^4.21.0",
+    "socket.io": "^4.7.5",
+    "socket.io-client": "^4.8.3"
+  },
   "devDependencies": {
-    "vite": "^6.3.3"
+    "vite": "^6.3.3",
+    "vitest": "^3.1.0"
   }
 }

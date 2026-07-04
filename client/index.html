@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>بنك الحظ — Bank El Haz</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+
+<!-- ═══ Lobby ═══ -->
+<div id="lobby" class="screen show">
+  <div class="lobby-card">
+    <h1>🏦 بنك الحظ</h1>
+    <div class="subtitle">Bank El Haz — Online Multiplayer</div>
+    <div id="conn-status" class="conn-status">Connecting…</div>
+
+    <div class="lobby-tabs">
+      <button id="tab-host" class="active">🎮 Host</button>
+      <button id="tab-join">🔗 Join</button>
+    </div>
+
+    <div id="panel-host" class="lobby-panel show">
+      <label for="host-name">Your name</label>
+      <input type="text" id="host-name" maxlength="20" placeholder="Player name" />
+      <label>Avatar</label>
+      <div class="pfp-grid" id="pfp-host"></div>
+      <div class="host-options">
+        <div class="opt-row"><span>Starting cash</span>
+          <select id="opt-cash">
+            <option value="800">$800 — fast game</option>
+            <option value="1500" selected>$1500 — classic</option>
+            <option value="2500">$2500 — long game</option>
+          </select>
+        </div>
+        <div class="opt-row"><span>Dice</span>
+          <select id="opt-dice"><option value="2" selected>Two dice</option><option value="1">One die</option></select>
+        </div>
+        <div class="opt-row"><span>Money visibility</span>
+          <select id="opt-money"><option value="visible" selected>Everyone sees all</option><option value="hidden">Only your own</option></select>
+        </div>
+      </div>
+      <button class="big-btn" id="btn-host">Create Room</button>
+    </div>
+
+    <div id="panel-join" class="lobby-panel">
+      <label for="join-name">Your name</label>
+      <input type="text" id="join-name" maxlength="20" placeholder="Player name" />
+      <label for="join-code">Room code</label>
+      <input type="text" id="join-code" maxlength="4" placeholder="ABCD" class="code-input" />
+      <label>Avatar</label>
+      <div class="pfp-grid" id="pfp-join"></div>
+      <button class="big-btn" id="btn-join">Join Room</button>
+    </div>
+
+    <div class="lobby-error" id="lobby-error"></div>
+
+    <div id="waiting" class="waiting hidden">
+      <p>Share this code with friends:</p>
+      <div class="room-code" id="room-code">——</div>
+      <div class="waiting-players" id="waiting-players"></div>
+      <button class="big-btn" id="btn-start" disabled>Waiting for players…</button>
+      <button class="big-btn danger" id="btn-leave">Leave Room</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Game ═══ -->
+<div id="game" class="screen">
+  <div id="board-wrap">
+    <div id="board"></div>
+    <div id="token-layer"></div>
+  </div>
+
+  <aside id="sidebar">
+    <div id="turn-banner">
+      <div class="tb-row">
+        <img id="tb-avatar" src="" alt="" />
+        <div class="tb-text"><span id="tb-name">—</span><span id="tb-sub">—</span></div>
+        <button id="btn-mute" title="Toggle sound">🔊</button>
+      </div>
+      <div class="timer-bar"><div id="timer-fill"></div></div>
+    </div>
+
+    <div id="players-panel"></div>
+    <div id="my-panel"></div>
+    <div id="action-panel"></div>
+    <div id="detail-panel" class="hidden"></div>
+    <div id="log-panel"></div>
+  </aside>
+</div>
+
+<!-- ═══ Overlays ═══ -->
+<div id="card-overlay" class="overlay">
+  <div class="card-face" id="card-face">
+    <div class="cf-deck" id="cf-deck">حظك</div>
+    <div class="cf-desc" id="cf-desc"></div>
+    <div class="cf-choices" id="cf-choices"></div>
+    <button class="big-btn" id="cf-ok">OK</button>
+  </div>
+</div>
+
+<div id="trade-overlay" class="overlay">
+  <div class="panel trade-panel" id="trade-box"></div>
+</div>
+
+<div id="gameover-overlay" class="overlay">
+  <div class="panel gameover-panel" id="gameover-box"></div>
+</div>
+
+<div id="toasts"></div>
+
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
