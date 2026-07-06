@@ -1113,6 +1113,7 @@
 
   function updateLobbyPlayers(players) {
     const list = document.getElementById('lobby-player-list');
+    window._lobbyPlayers = players;
     const isHost = players ? players[0]?.id === myPlayerId : true;
     const pList = players || [];
     list.innerHTML = pList.map((p, i) =>
@@ -1551,11 +1552,12 @@
   };
 
   window.openPlayerList = () => {
-    if (!gameState) return;
-    const isHost = gameState.players[0]?.id === myPlayerId;
+    const players = gameState ? gameState.players : (window._lobbyPlayers || []);
+    if (!players || players.length === 0) return;
+    const isHost = players[0]?.id === myPlayerId;
     const container = document.getElementById('player-list-content');
     let html = '';
-    gameState.players.forEach(p => {
+    players.forEach(p => {
       const status = p.isBankrupt ? '💀' : p.connected === false ? '🔴 Disconnected' : '🟢 Connected';
       html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #e0d5c0;">
         <span><img src="${getPfpUrl(p.avatar || 1)}" style="width:28px;height:28px;border-radius:50%;vertical-align:middle;margin-right:8px;" />${p.name} <span style="font-size:0.8rem;color:#888;">${status}</span></span>`;
@@ -1574,7 +1576,7 @@
 
   window.terminatePlayer = (playerId) => {
     if (!confirm('Kick this player? Their money will be split among remaining players, properties freed, and they cannot rejoin.')) return;
-    socket.emit('terminate_player', { roomCode, playerId });
+    socket.emit('terminate_player', { roomCode, targetId: playerId });
     closePlayerList();
   };
 
@@ -3317,62 +3319,43 @@
   window.closePreview = closePreview;
 
   function renderPreviewBoardHTML(theme) {
-    const previewTheme = theme;
-    const squares = boardData.squares || [];
-    // 11 cols × 9 rows grid
-    let html = `<div style="display:grid;grid-template-columns:90px 75px 75px 75px 75px 90px 75px 75px 75px 75px 90px;grid-template-rows:95px repeat(6,65px) 95px;gap:2px;background:#d4a853;border:4px solid #8B6914;border-radius:12px;padding:4px;">`;
+    const squares = boardData.board_positions || [];
     const gridPos = {
       1:'1/9',2:'1/8',3:'1/7',4:'1/6',5:'1/5',6:'1/4',7:'1/3',8:'1/2',9:'1/1',
       10:'2/1',11:'3/1',12:'4/1',13:'5/1',14:'6/1',15:'7/1',16:'8/1',17:'9/1',18:'10/1',
       19:'10/2',20:'10/3',21:'10/4',22:'10/5',23:'10/6',24:'10/7',25:'10/8',
       26:'9/8',27:'8/8',28:'7/8',29:'6/8',30:'5/8',31:'4/8',32:'3/8',33:'2/8',34:'1/8'
     };
+    const CORNER_ICONS = {1:'🏁',8:'🎰',18:'🚌',25:'🔒'};
+    const DECK_INFO = {4:{i:'⚖️🍀',n:'محكمة أو حظك'},11:{i:'⚖️',n:'المحكمة'},13:{i:'🍀',n:'حظك'},21:{i:'⚖️',n:'المحكمة'},30:{i:'🍀',n:'حظك'},32:{i:'⚖️',n:'المحكمة'}};
     const themeSlotMap = {
       1:'corner-beginning',4:'dual-trigger',8:'corner-club',11:'mahkama-tb',
       13:'hazak',16:'fuel-station',18:'corner-bus',21:'mahkama-right',
       25:'corner-prison',30:'hazak',32:'mahkama-tb'
     };
-    const cornerEmoji = {1:'🏁 ابدأ',8:'🎰',18:'🚌',25:'🔒'};
-    const getColorGroupBG = (cg) => {
-      const m = {أحمر:'#e53935',أزرق:'#1e88e5',أخضر:'#43a047',برتقالي:'#fb8c00',بنفسجي:'#8e24aa',أصفر:'#fdd835',وردي:'#ec407a'};
-      return m[cg] || null;
-    };
+    let html = `<div style="display:grid;grid-template-columns:90px 75px 75px 75px 75px 90px 75px 75px 75px 75px 90px;grid-template-rows:95px repeat(6,65px) 95px;gap:2px;background:#d4a853;border:4px solid #8B6914;border-radius:12px;padding:4px;">`;
     for (let i = 1; i <= 34; i++) {
       const pos = gridPos[i]?.split('/');
       if (!pos) continue;
       const sq = squares.find(s => s.id === i);
-      const name = sq?.name || '';
-      const colorGroup = sq?.color_group || '';
-      const isCorner = [1,8,18,25].includes(i);
-      const isDeck = [4,11,13,21,30,32].includes(i);
-      const bgColor = getColorGroupBG(colorGroup);
+      if (!sq) continue;
       const slotKey = themeSlotMap[i];
-      let imgUrl = '';
-      if (previewTheme !== 'plain' && slotKey) {
-        imgUrl = `assets/themes/${previewTheme}/${THEME_SLOT_FILES[slotKey]}`;
-      }
-      let bgStyle = 'background:#e8d5a3;';
-      if (imgUrl) {
-        bgStyle = `background-image:url(${imgUrl});background-size:cover;background-position:center;`;
-      } else if (bgColor) {
-        bgStyle = `background:${bgColor};`;
-      }
-      html += `<div style="grid-column:${pos[0]};grid-row:${pos[1]};border-radius:4px;border:2px solid #c4a96a;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:0.55rem;text-align:center;overflow:hidden;${bgStyle}color:#3a2a1a;font-weight:bold;">`;
-      if (isCorner) {
-        html += cornerEmoji[i] || name;
-      } else if (isDeck) {
-        const deckIcons = {4:'⚖️🍀',11:'⚖️',13:'🍀',21:'⚖️',30:'🍀',32:'⚖️'};
-        html += `<span style="font-size:0.8rem">${deckIcons[i] || '🃏'}</span>`;
-        if (name) html += `<span style="font-size:0.5rem;margin-top:1px;">${name}</span>`;
+      let imgBg = '';
+      if (theme !== 'plain' && slotKey && THEME_SLOT_FILES[slotKey]) imgBg = `background-image:url(assets/themes/${theme}/${THEME_SLOT_FILES[slotKey]});background-size:cover;background-position:center;`;
+      if (sq.type === 'corner_square') {
+        html += `<div style="grid-column:${pos[0]};grid-row:${pos[1]};border-radius:4px;border:2px solid #c4a96a;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:0.6rem;text-align:center;overflow:hidden;font-weight:bold;color:#3a2a1a;${imgBg || 'background:#e8d5a3;'}"><span style="font-size:1rem">${CORNER_ICONS[i] || '📍'}</span><span>${sq.name}</span></div>`;
+      } else if (sq.type === 'property') {
+        const cgColor = COLOR_BG_MAP[sq.color_group] || '#e8d5a3';
+        html += `<div style="grid-column:${pos[0]};grid-row:${pos[1]};border-radius:4px;border:2px solid #c4a96a;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:0.55rem;text-align:center;overflow:hidden;font-weight:bold;color:#3a2a1a;${imgBg || `background:${cgColor};`}"><span style="font-size:0.6rem;line-height:1.2;padding:0 2px;">${sq.name}</span><span style="font-size:0.5rem;opacity:0.8;">${sq.color_group||''}</span><span style="font-size:0.5rem;">$${sq.purchase_price||''}</span></div>`;
+      } else if (sq.type === 'deck_trigger' || sq.type === 'dual_deck_trigger') {
+        const d = DECK_INFO[i] || {i:'🃏',n:sq.name};
+        html += `<div style="grid-column:${pos[0]};grid-row:${pos[1]};border-radius:4px;border:2px solid #c4a96a;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:0.55rem;text-align:center;overflow:hidden;font-weight:bold;color:#3a2a1a;${imgBg || 'background:#e8d5a3;'}"><span style="font-size:0.8rem">${d.i}</span><span style="font-size:0.5rem;color:#6a4a1a;">${d.n}</span></div>`;
       } else {
-        html += `<span style="font-size:0.6rem;line-height:1.1;">${name}</span>`;
-        if (colorGroup) html += `<span style="font-size:0.45rem;color:#5a3a0a;">${colorGroup}</span>`;
+        html += `<div style="grid-column:${pos[0]};grid-row:${pos[1]};border-radius:4px;border:2px solid #c4a96a;display:flex;align-items:center;justify-content:center;font-size:0.6rem;text-align:center;overflow:hidden;font-weight:bold;color:#3a2a1a;${imgBg || 'background:#e8d5a3;'}">${sq.name||''}</div>`;
       }
-      html += `</div>`;
     }
-    // Center
     let centerBg = '';
-    if (previewTheme !== 'plain') centerBg = `background-image:url(assets/themes/${previewTheme}/center-bg.png);background-size:cover;background-position:center;`;
+    if (theme !== 'plain') centerBg = `background-image:url(assets/themes/${theme}/center-bg.png);background-size:cover;background-position:center;`;
     html += `<div style="grid-column:2/11;grid-row:2/8;background:#d4a853;border-radius:10px;border:2px solid #8B6914;display:flex;align-items:center;justify-content:center;font-size:0.8rem;color:#5a3a0a;font-weight:bold;${centerBg}">🏦 بنك الحظ</div>`;
     html += '</div>';
     return html;
