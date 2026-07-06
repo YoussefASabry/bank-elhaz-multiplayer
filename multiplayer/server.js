@@ -90,6 +90,25 @@ io.on('connection', (socket) => {
     if (cb) cb({ ok: true });
   });
 
+  socket.on('debug_roll', ({ roomCode, targetId }) => {
+    const room = manager.getRoom(roomCode);
+    if (!room || !room.gameState) return;
+    const gs = room.gameState;
+    const host = room.players[0];
+    if (!host || host.id !== socket.id) return;
+    if (gs.phase !== 'roll') return;
+    const player = gs.players[gs.currentPlayerIndex];
+    if (!player) return;
+    const destId = targetId || 1;
+    const validIds = gs.boardSquares.map(sq => sq.id);
+    const bestId = validIds.includes(destId) ? destId : 1;
+    const oldPos = player.position;
+    player.position = bestId;
+    gs.lastRoll = { die1: 0, die2: 0, total: 0, newPos: bestId, path: [bestId], playerId: socket.id, passedGo: bestId < oldPos };
+    gs.phase = 'rolling';
+    io.to(roomCode).emit('dice_rolled', gs.lastRoll);
+  });
+
   socket.on('confirm_landing', ({ roomCode, rollResult }) => {
     const room = manager.getRoom(roomCode);
     if (!room || !room.gameState) return;
@@ -139,9 +158,108 @@ io.on('connection', (socket) => {
     broadcastState(roomCode);
   });
 
+  socket.on('sell_to_bank_for_rent', ({ roomCode }) => {
+    const room = manager.getRoom(roomCode);
+    if (!room || !room.gameState) return;
+    const gs = room.gameState;
+    const player = gs.players.find(p => p.id === socket.id);
+    if (!player || !gs.pendingRentPayment) return;
+    // Auto-sell all properties to bank until player can afford rent
+    const rent = gs.pendingRentPayment;
+    const owned = gs.boardSquares.filter(s => s.owner === socket.id);
+    for (const sq of [...owned]) {
+      if (player.money >= rent.amount) break;
+      if (sq.upgrade) room.engine.sellUpgrade(socket.id, sq.id);
+      room.engine.sellPropertyToBank(socket.id, sq.id);
+    }
+    if (player.money >= rent.amount) {
+      manager.resolveRent(roomCode, socket.id);
+      actionLog(roomCode, `🏚️ ${player.name} sold properties to pay $${rent.amount} rent`);
+    } else {
+      // Still can't pay — all money goes to owner, then forced jail
+      const owner = gs.players.find(p => p.id === rent.ownerId);
+      if (owner && player.money > 0) {
+        owner.money += player.money;
+        actionLog(roomCode, `💰 ${player.name}'s remaining $${player.money} goes to ${owner.name}`);
+        player.money = 0;
+      }
+      // Force bankruptcy / jail
+      gs.boardSquares.forEach(sq => {
+        if (sq.owner === socket.id) { sq.owner = null; sq.upgrade = null; }
+      });
+      player.isBankrupt = false;
+      player.position = 25; // Go to jail
+      player.statusEffects.missedTurnsRemaining = 5;
+      gs.pendingRentPayment = null;
+      actionLog(roomCode, `🔒 ${player.name} couldn't pay — all properties to bank, forced 5 turns in jail`);
+      manager.finishTurn(room, roomCode, io);
+    }
+    broadcastState(roomCode);
+  });
+
+  socket.on('declare_bankrupt_from_rent', ({ roomCode }) => {
+    const room = manager.getRoom(roomCode);
+    if (!room || !room.gameState) return;
+    const gs = room.gameState;
+    const player = gs.players.find(p => p.id === socket.id);
+    if (!player || !gs.pendingRentPayment) return;
+    const rent = gs.pendingRentPayment;
+    const owner = gs.players.find(p => p.id === rent.ownerId);
+    // All money goes to owner
+    if (owner && player.money > 0) {
+      owner.money += player.money;
+      actionLog(roomCode, `💰 ${player.name}'s $${player.money} goes to ${owner.name}`);
+      player.money = 0;
+    }
+    // All properties to bank
+    gs.boardSquares.forEach(sq => {
+      if (sq.owner === socket.id) { sq.owner = null; sq.upgrade = null; }
+    });
+    // Go to jail for 5 turns
+    player.position = 25;
+    player.statusEffects.missedTurnsRemaining = 5;
+    player.isBankrupt = false;
+    gs.pendingRentPayment = null;
+    actionLog(roomCode, `🔒 ${player.name} declared bankruptcy — 5 turns in jail`);
+    manager.finishTurn(room, roomCode, io);
+    broadcastState(roomCode);
+  });
+
+  socket.on('draw_card', ({ roomCode, deckType }) => {
+    const room = manager.getRoom(roomCode);
+    if (!room || !room.gameState) return;
+    const gs = room.gameState;
+    const player = gs.players.find(p => p.id === socket.id);
+    if (!player) return;
+    const result = manager.handleDrawCard(roomCode, socket.id, deckType);
+    if (!result) return;
+    const cardInfo = {
+      card: result.card,
+      cardNumber: result.cardNumber,
+      squareName: gs.blindCard?.squareName || '',
+      deckType: result.deckType,
+      pendingSecondCard: result.pendingSecondCard,
+      cityNames: result.cityNames || [],
+    };
+    // Send private card to the drawing player immediately
+    io.to(socket.id).emit('private_card', cardInfo);
+    io.to(roomCode).except(socket.id).emit('other_drawing', { playerName: player.name });
+    // Broadcast card to all other players 2 seconds later, stays visible until confirm
+    setTimeout(() => {
+      io.to(roomCode).except(socket.id).emit('public_card_draw', {
+        ...cardInfo,
+        playerName: player.name,
+      });
+    }, 2000);
+    actionLog(roomCode, `🃏 ${player.name} is reading a card...`);
+    broadcastState(roomCode);
+  });
+
   socket.on('confirm_blind_card', ({ roomCode }) => {
     const room = manager.getRoom(roomCode);
     if (!room || !room.gameState) return;
+    // Notify others to close the public card view
+    io.to(roomCode).except(socket.id).emit('close_public_card');
     const outcome = manager.resolveBlindCard(roomCode, socket.id, io);
     if (outcome) {
       io.to(roomCode).emit('card_outcome', outcome);
@@ -152,7 +270,7 @@ io.on('connection', (socket) => {
     if (gs && gs.pendingCityOwnersCard) {
       const cityInfo = gs.pendingCityOwnersCard;
       const cityStr = cityInfo.cityNames.join('، ');
-      actionLog(roomCode, `🏙️ المدن المختارة: ${cityStr} — تم تحصيل ${cityInfo.totalCollected}ج`);
+      actionLog(roomCode, `🏙️ ${cityStr} — collected $${cityInfo.totalCollected}`);
       gs.pendingCityOwnersCard = null;
     }
     broadcastState(roomCode);
@@ -184,7 +302,10 @@ io.on('connection', (socket) => {
     const gs = room.gameState;
     const player = gs.players.find(p => p.id === socket.id);
     manager.useJailFreeCard(roomCode, socket.id);
-    if (player) actionLog(roomCode, `🔓 ${player.name} used a jail-free card`);
+    if (player) {
+      actionLog(roomCode, `🔓 ${player.name} used a jail-free card`);
+      io.to(socket.id).emit('splash_text', { text: '🔓 Jail Free!', type: 'celebrate' });
+    }
     broadcastState(roomCode);
   });
 
@@ -198,14 +319,29 @@ io.on('connection', (socket) => {
     broadcastState(roomCode);
   });
 
-  socket.on('sell_building', ({ roomCode, propertyId }) => {
+  socket.on('buy_upgrade', ({ roomCode, propertyId, upgradeType }) => {
     const room = manager.getRoom(roomCode);
     if (!room || !room.gameState) return;
     const gs = room.gameState;
     const player = gs.players.find(p => p.id === socket.id);
     const sq = gs.boardSquares.find(s => s.id === propertyId);
-    manager.sellBuilding(roomCode, socket.id, propertyId);
-    if (player && sq) actionLog(roomCode, `🏗️ ${player.name} sold a building on ${sq.name}`);
+    const ok = manager.buyUpgrade(roomCode, socket.id, propertyId, upgradeType);
+    if (ok && player && sq) actionLog(roomCode, `🏗️ ${player.name} built ${upgradeType} on ${sq.name}`);
+    if (ok) {
+      gs.pendingUpgradeChoice = null;
+      manager.finishTurn(room, roomCode, io);
+    }
+    broadcastState(roomCode);
+  });
+
+  socket.on('sell_upgrade', ({ roomCode, propertyId }) => {
+    const room = manager.getRoom(roomCode);
+    if (!room || !room.gameState) return;
+    const gs = room.gameState;
+    const player = gs.players.find(p => p.id === socket.id);
+    const sq = gs.boardSquares.find(s => s.id === propertyId);
+    manager.sellUpgrade(roomCode, socket.id, propertyId);
+    if (player && sq) actionLog(roomCode, `🏗️ ${player.name} sold upgrade on ${sq.name}`);
     broadcastState(roomCode);
   });
 
@@ -225,7 +361,27 @@ io.on('connection', (socket) => {
   socket.on('trade_request', ({ roomCode, targetId }) => {
     const room = manager.getRoom(roomCode);
     if (!room || !room.gameState) return;
-    const result = manager.initTrade(roomCode, socket.id, targetId);
+    const gs = room.gameState;
+    const initiator = gs.players.find(p => p.id === socket.id);
+    const partner = gs.players.find(p => p.id === targetId);
+    if (!initiator || !partner || initiator.isBankrupt || partner.isBankrupt) {
+      socket.emit('trade_error', { message: 'Trade could not be started' });
+      return;
+    }
+    // Send trade request notification to the partner
+    io.to(targetId).emit('trade_request_notify', {
+      initiatorId: socket.id,
+      initiatorName: initiator.name,
+      initiatorAvatar: initiator.avatar,
+    });
+    socket.emit('trade_request_sent', { partnerName: partner.name });
+    actionLog(roomCode, `🤝 ${initiator.name} sent a trade request to ${partner.name}`);
+  });
+
+  socket.on('accept_trade_request', ({ roomCode, initiatorId }) => {
+    const room = manager.getRoom(roomCode);
+    if (!room || !room.gameState) return;
+    const result = manager.initTrade(roomCode, initiatorId, socket.id);
     if (!result) {
       socket.emit('trade_error', { message: 'Trade could not be started' });
       return;
@@ -237,6 +393,18 @@ io.on('connection', (socket) => {
     // Send to both participants
     io.to(roomCode).emit('trade_opened', result);
     actionLog(roomCode, `🤝 ${result.initiator.name} opened a trade with ${result.partner.name}`);
+  });
+
+  socket.on('decline_trade_request', ({ roomCode, initiatorId }) => {
+    const room = manager.getRoom(roomCode);
+    if (!room || !room.gameState) return;
+    const gs = room.gameState;
+    const initiator = gs.players.find(p => p.id === initiatorId);
+    const partner = gs.players.find(p => p.id === socket.id);
+    if (initiator) {
+      io.to(initiatorId).emit('trade_request_declined', { partnerName: partner?.name || 'Unknown' });
+    }
+    actionLog(roomCode, `❌ ${partner?.name || 'Unknown'} declined the trade request`);
   });
 
   socket.on('trade_send_proposal', ({ roomCode, cash, propIds, jailCards }) => {
@@ -258,6 +426,15 @@ io.on('connection', (socket) => {
     if (result.aName) {
       io.to(roomCode).emit('trade_executed', result);
       actionLog(roomCode, `🤝 Trade executed between ${result.aName} and ${result.bName}!`);
+      // If rent is due and trade is between renter and owner, waive rent
+      const gs = room.gameState;
+      if (gs.pendingRentPayment) {
+        const { playerId: renterId, ownerId } = gs.pendingRentPayment;
+        if ((result.aId === renterId && result.bId === ownerId) || (result.aId === ownerId && result.bId === renterId)) {
+          gs.pendingRentPayment = null;
+          actionLog(roomCode, `✅ Rent waived due to trade with owner!`);
+        }
+      }
       broadcastState(roomCode);
     } else {
       io.to(roomCode).emit('trade_state_update', result);
@@ -281,9 +458,22 @@ io.on('connection', (socket) => {
     if (!room || !room.gameState) return;
     const result = manager.cancelTrade(roomCode, socket.id);
     if (result) {
+      // If there's a pending rent payment, restore rent_payment phase
+      if (room.gameState.pendingRentPayment) {
+        room.gameState.phase = 'rent_payment';
+      }
       io.to(roomCode).emit('trade_cancelled', result);
       actionLog(roomCode, `🚫 Trade cancelled`);
+      broadcastState(roomCode);
     }
+  });
+
+  socket.on('skip_upgrade', ({ roomCode }) => {
+    const room = manager.getRoom(roomCode);
+    if (!room || !room.gameState) return;
+    room.gameState.pendingUpgradeChoice = null;
+    manager.finishTurn(room, roomCode, io);
+    broadcastState(roomCode);
   });
 
   socket.on('sell_building_in_trade', ({ roomCode, propId }) => {
@@ -291,13 +481,15 @@ io.on('connection', (socket) => {
     if (!room || !room.gameState) return;
     const gs = room.gameState;
     const sq = gs.boardSquares.find(s => s.id === propId);
-    if (!sq || sq.owner !== socket.id || !sq.buildings || sq.buildings.length === 0) return;
+    if (!sq || sq.owner !== socket.id || !sq.upgrade) return;
     const player = gs.players.find(p => p.id === socket.id);
     if (!player) return;
-    const refund = sq.buildings.reduce((t, b) => t + Math.floor((b.cost || 0) / 2), 0);
+    const key = sq.upgrade + '_rent';
+    const cost = sq.owner_paying?.[key] || 0;
+    const refund = Math.round(cost * 0.75);
     player.money += refund;
-    sq.buildings = [];
-    actionLog(roomCode, `🏗️ ${player.name} sold buildings on ${sq.name} for $${refund}`);
+    sq.upgrade = null;
+    actionLog(roomCode, `🏗️ ${player.name} sold upgrade on ${sq.name} for $${refund}`);
     broadcastState(roomCode);
   });
 
@@ -308,30 +500,35 @@ io.on('connection', (socket) => {
     const gs = room.gameState;
     const player = gs.players.find(p => p.id === socket.id);
     manager.resolveClubChoice(roomCode, socket.id, choice);
-    if (player) actionLog(roomCode, `🎰 ${player.name} chose ${choice === 'membership' ? 'membership' : 'guest'} at the club`);
+    if (player) {
+      actionLog(roomCode, `🎰 ${player.name} chose ${choice === 'membership' ? 'membership' : 'guest'} at the club`);
+      if (choice === 'membership') {
+        io.to(socket.id).emit('splash_text', { text: '🎰 Club Member!', type: 'celebrate' });
+      }
+    }
     broadcastState(roomCode);
   });
 
   // ── Bid events (v2) ──
-  socket.on('create_bid', ({ roomCode, cash, propIds }) => {
+  socket.on('create_bid', ({ roomCode, cash, propIds, jailCards }) => {
     const room = manager.getRoom(roomCode);
     if (!room || !room.gameState) return;
     const gs = room.gameState;
     const player = gs.players.find(p => p.id === socket.id);
     if (!player) return;
-    const bid = manager.createBid(roomCode, socket.id, cash, propIds);
+    const bid = manager.createBid(roomCode, socket.id, cash, propIds, jailCards);
     if (!bid) return;
     io.to(roomCode).emit('bid_created', bid);
     actionLog(roomCode, `📢 ${player.name} posted a public bid!`);
   });
 
-  socket.on('bid_respond', ({ roomCode, bidId, cash, propIds }) => {
+  socket.on('bid_respond', ({ roomCode, bidId, cash, propIds, jailCards }) => {
     const room = manager.getRoom(roomCode);
     if (!room || !room.gameState) return;
     const gs = room.gameState;
     const player = gs.players.find(p => p.id === socket.id);
     if (!player) return;
-    const result = manager.respondToBid(roomCode, bidId, socket.id, cash, propIds);
+    const result = manager.respondToBid(roomCode, bidId, socket.id, cash, propIds, jailCards);
     if (!result) return;
     // Emit the full updated bid
     const bid = gs.activeBids?.find(b => b.id === bidId);
@@ -360,22 +557,75 @@ io.on('connection', (socket) => {
     }
   });
 
+  // ── Reconnection ──
+
+  socket.on('rejoin_game', ({ roomCode, playerName }) => {
+    const room = manager.getRoom(roomCode);
+    if (!room) { socket.emit('rejoin_failed', { error: 'Room not found' }); return; }
+    if (room.kicked?.has(playerName)) { socket.emit('rejoin_failed', { error: 'You were removed from this game' }); return; }
+    const existing = room.players.find(p => p.name === playerName && !p.connected);
+    if (!existing) { socket.emit('rejoin_failed', { error: 'Player not found or already connected' }); return; }
+    const oldId = existing.id;
+    existing.id = socket.id;
+    existing.connected = true;
+    if (room.gameState) {
+      const gp = room.gameState.players.find(p => p.id === oldId);
+      if (gp) { gp.id = socket.id; gp.connected = true; }
+    }
+    socket.join(roomCode);
+    io.to(roomCode).emit('player_reconnected', { playerId: socket.id, oldPlayerId: oldId, players: room.players });
+    socket.emit('rejoined', { roomCode, playerId: socket.id, players: room.players, gameState: room.gameState });
+    console.log(`[rejoin] ${playerName} → room ${roomCode} (was ${oldId}, now ${socket.id})`);
+    if (room.gameState) {
+      const room2 = manager.getRoom(roomCode);
+      if (room2) {
+        manager.stopTurnTimer(room2);
+        manager.startTurnTimer(roomCode, io);
+      }
+    }
+  });
+
+  socket.on('terminate_player', ({ roomCode, targetId }) => {
+    const result = manager.terminatePlayer(roomCode, socket.id, targetId);
+    if (!result) return;
+    actionLog(roomCode, `💀 A player was kicked by the host`);
+    if (result.gameState) {
+      io.to(roomCode).emit('player_terminated', { targetId, players: result.players });
+      io.to(roomCode).emit('state_update', { gameState: result.gameState, phase: result.gameState.phase });
+      const room = manager.getRoom(roomCode);
+      if (room && room.engine) {
+        const gs = result.gameState;
+        if (gs.gameOver) {
+          manager.stopTurnTimer(room);
+          io.to(roomCode).emit('game_over', { winner: gs.players.find(p => !p.isBankrupt) });
+        }
+      }
+    } else {
+      io.to(roomCode).emit('update_players', { players: result.players });
+    }
+  });
+
   // ── Disconnect ──
 
   socket.on('disconnect', () => {
     console.log(`[disconnect] ${socket.id}`);
-    // Find room containing this player
     for (const [code, room] of manager.rooms) {
       const idx = room.players.findIndex(p => p.id === socket.id);
       if (idx !== -1) {
-        room.players.splice(idx, 1);
-        io.to(code).emit('player_disconnected', { playerId: socket.id, players: room.players });
+        const player = room.players[idx];
+        // If game is active, just mark disconnected
         if (room.gameState) {
+          manager.disconnectPlayer(code, socket.id);
+          io.to(code).emit('player_disconnected', { playerId: socket.id, players: room.players, connected: false });
           // If it's the current player's turn and they disconnect, auto-pass
           const current = room.gameState.players[room.gameState.currentPlayerIndex];
           if (current && current.id === socket.id) {
             manager.handleDisconnectAutoPass(room, code, io);
           }
+        } else {
+          // In lobby — remove entirely
+          room.players.splice(idx, 1);
+          io.to(code).emit('update_players', { players: room.players });
         }
         if (room.players.length === 0) {
           manager.destroyRoom(code);

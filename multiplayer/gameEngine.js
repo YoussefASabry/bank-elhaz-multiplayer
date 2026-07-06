@@ -25,7 +25,7 @@ export class GameEngine {
     const opts = this.options;
     const boardSquares = boardData.board_positions.map(sq => {
       if (sq.type === 'property') {
-        return { ...sq, owner: null, buildings: [] };
+        return { ...sq, owner: null, upgrade: null };
       }
       return { ...sq };
     });
@@ -41,10 +41,12 @@ export class GameEngine {
       id: rp.id,
       name: rp.name,
       avatar: rp.avatar || 1,
+      connected: rp.connected !== false,
       position: 1,
       money: cash,
       isHuman: true,
       inventory: { freeCards: 0, getOutofPrisonCards: 0, jailFreeCards: 0 },
+      isClubMember: false,
       statusEffects: { payHalfRentNextLanding: false, doubleNextRoll: false, missedTurnsRemaining: 0, skipNextTurn: false },
       isBankrupt: false,
       _prevMoney: cash,
@@ -53,8 +55,7 @@ export class GameEngine {
     this.state = {
       gameMeta: {
         maxPlayers: boardData.game_meta.max_players,
-        passGoSalary: boardData.game_meta.pass_go_salary,
-        bankManagerBonus: boardData.game_meta.bank_manager_bonus,
+        passGoSalary: opts.passGoSalary || 250,
         diceCount: opts.diceCount || 2,
         moneyVisible: opts.moneyVisible !== false,
       },
@@ -78,6 +79,7 @@ export class GameEngine {
       blindCard: null,
       pendingSecondCard: false,
       pendingClubChoice: null,
+      pendingUpgradeChoice: null,
       activeBids: [],
       tradeProposal: null,
       tradeConfirmations: {},
@@ -226,7 +228,13 @@ export class GameEngine {
         this.finishTurn();
       }
     } else if (square.owner === player.id) {
-      this.finishTurn();
+      const upgradesAvail = this.getUpgradeOptions(player, square);
+      if (upgradesAvail.length > 0) {
+        gs.pendingUpgradeChoice = { square, playerId: player.id, options: upgradesAvail };
+        gs.phase = 'upgrade_choice';
+      } else {
+        this.finishTurn();
+      }
     } else {
       const owner = gs.players.find(p => p.id === square.owner);
       const rent = this.calculateRent(square, player);
@@ -235,26 +243,88 @@ export class GameEngine {
     }
   }
 
+  getUpgradeOptions(player, square) {
+    if (!square.visitor_paying || !square.owner_paying) return [];
+    const gs = this.state;
+    const group = square.color_group;
+    if (!group) return [];
+    const colorSquares = gs.boardSquares.filter(s => s.color_group === group);
+    const ownsAll = colorSquares.every(s => s.owner === player.id);
+    if (!ownsAll) return [];
+    const upgrades = [];
+    if (square.upgrade !== 'garage') upgrades.push('garage');
+    if (square.upgrade !== 'rest_stop') upgrades.push('rest_stop');
+    if (square.upgrade !== 'market') upgrades.push('market');
+    return upgrades.map(type => {
+      const key = type + '_rent';
+      return {
+        type,
+        cost: square.owner_paying[key] || 0,
+        visitorRent: square.visitor_paying[key] || 0,
+      };
+    }).filter(u => player.money >= u.cost);
+  }
+
   handleDeckTrigger(player, square) {
     const gs = this.state;
     const deckType = square.deck_type || (square.type === 'dual_deck_trigger' ? 'dual' : 'hazak');
 
-    if (deckType === 'dual') {
+    // Instead of drawing immediately, set pending and wait for player to click the deck pile
+    gs.pendingDeckDraw = { playerId: player.id, deckType, squareName: square.name };
+    gs.phase = 'draw_card';
+  }
+
+  preSelectCitiesForCard(card) {
+    const gs = this.state;
+    const ownedProperties = gs.boardSquares.filter(sq => sq.type === 'property' && sq.owner !== null);
+    this.shuffle(ownedProperties);
+    const count = Math.min(card.city_count || 3, ownedProperties.length);
+    const chosen = ownedProperties.slice(0, count);
+    return {
+      cityIds: chosen.map(c => c.id),
+      cityNames: chosen.map(c => c.name),
+    };
+  }
+
+  handleDrawCard(playerId, deckType) {
+    const gs = this.state;
+    const pending = gs.pendingDeckDraw;
+    if (!pending || pending.playerId !== playerId) return null;
+    if (pending.deckType !== deckType && pending.deckType !== 'dual') return null;
+
+    if (pending.deckType === 'dual') {
+      // First draw: Mahkama
       const card1 = this.drawCard('mahkama');
       if (card1) {
-        gs.blindCard = { card: card1, playerId: player.id, squareName: square.name, deckType: 'mahkama', cardNumber: 1 };
-        gs.pendingSecondCard = { deckType: 'hazak', squareName: square.name };
+        let extra = {};
+        if (card1.action === 'collect_from_city_owners') {
+          extra = this.preSelectCitiesForCard(card1);
+        }
+        gs.blindCard = { card: card1, playerId, squareName: pending.squareName, deckType: 'mahkama', cardNumber: 1, ...extra };
+        gs.pendingSecondCard = { deckType: 'hazak', squareName: pending.squareName };
+        gs.pendingDeckDraw = null;
         gs.phase = 'blind_card';
+        return { card: card1, cardNumber: 1, deckType: 'mahkama', pendingSecondCard: true, ...extra };
       } else {
+        gs.pendingDeckDraw = null;
         this.finishTurn();
+        return null;
       }
     } else {
       const card = this.drawCard(deckType);
       if (card) {
-        gs.blindCard = { card, playerId: player.id, squareName: square.name, deckType };
+        let extra = {};
+        if (card.action === 'collect_from_city_owners') {
+          extra = this.preSelectCitiesForCard(card);
+        }
+        gs.blindCard = { card, playerId, squareName: pending.squareName, deckType, ...extra };
+        gs.pendingDeckDraw = null;
         gs.phase = 'blind_card';
+        return { card, cardNumber: 1, deckType, pendingSecondCard: false, ...extra };
       } else {
+        gs.pendingDeckDraw = null;
         this.finishTurn();
+        return null;
       }
     }
   }
@@ -296,6 +366,7 @@ export class GameEngine {
 
     if (choice === 'membership' && player && player.money >= membershipCost) {
       player.money -= membershipCost;
+      player.isClubMember = true;
       this.checkLiquidation(playerId);
     } else if (choice === 'guest' && player && player.money >= guestFineFee) {
       player.money -= guestFineFee;
@@ -332,11 +403,11 @@ export class GameEngine {
   }
 
   calculateRent(square, player) {
-    const buildingCount = square.buildings ? square.buildings.length : 0;
     let rent = square.base_rent;
-    if (buildingCount >= 3) rent = square.visitor_paying.market_rent;
-    else if (buildingCount >= 2) rent = square.visitor_paying.rest_stop_rent;
-    else if (buildingCount >= 1) rent = square.visitor_paying.garage_rent;
+    if (square.upgrade && square.visitor_paying) {
+      const key = square.upgrade + '_rent';
+      if (square.visitor_paying[key]) rent = square.visitor_paying[key];
+    }
     if (player.statusEffects.payHalfRentNextLanding) {
       rent = Math.ceil(rent / 2);
       player.statusEffects.payHalfRentNextLanding = false;
@@ -587,13 +658,11 @@ export class GameEngine {
   effectBankPaysPerBuilding(card, player) {
     const gs = this.state;
     const ownedSquares = gs.boardSquares.filter(sq => sq.owner === player.id);
-    let totalBuildings = 0;
+    let totalUpgrades = 0;
     ownedSquares.forEach(sq => {
-      if (sq.buildings) {
-        totalBuildings += sq.buildings.length;
-      }
+      if (sq.upgrade) totalUpgrades++;
     });
-    const amount = totalBuildings * (card.per_building_amount || 25);
+    const amount = totalUpgrades * (card.per_building_amount || 25);
     player.money += amount;
   }
 
@@ -603,10 +672,8 @@ export class GameEngine {
     const ownedSquares = gs.boardSquares.filter(sq => sq.owner === player.id);
     let total = 0;
     ownedSquares.forEach(sq => {
-      if (sq.buildings) {
-        sq.buildings.forEach(b => {
-          if (costs[b]) total += costs[b];
-        });
+      if (sq.upgrade && costs[sq.upgrade]) {
+        total += costs[sq.upgrade];
       }
     });
     player.money -= total;
@@ -614,10 +681,16 @@ export class GameEngine {
 
   effectCollectFromCityOwners(card, player, playerId) {
     const gs = this.state;
-    const ownedProperties = gs.boardSquares.filter(sq => sq.type === 'property' && sq.owner !== null);
-    this.shuffle(ownedProperties);
-    const count = Math.min(card.city_count || 3, ownedProperties.length);
-    const chosenCities = ownedProperties.slice(0, count);
+    let chosenCities;
+
+    if (gs.blindCard?.cityIds && gs.blindCard?.cityNames) {
+      chosenCities = gs.blindCard.cityIds.map(id => gs.boardSquares.find(s => s.id === id)).filter(Boolean);
+    } else {
+      const ownedProperties = gs.boardSquares.filter(sq => sq.type === 'property' && sq.owner !== null);
+      this.shuffle(ownedProperties);
+      const count = Math.min(card.city_count || 3, ownedProperties.length);
+      chosenCities = ownedProperties.slice(0, count);
+    }
 
     if (chosenCities.length === 0) {
       this.discardCard(card, gs.blindCard?.deckType || 'hazak');
@@ -639,8 +712,7 @@ export class GameEngine {
     payerSet.forEach(ownerId => {
       const owner = gs.players.find(p => p.id === ownerId);
       if (owner && !owner.isBankrupt) {
-        const ownedCount = chosenCities.filter(c => c.owner === owner.id).length;
-        const payment = ownedCount * (card.amount_per_city || 50);
+        const payment = (card.amount_per_city || 50);
         const amount = Math.min(payment, owner.money);
         owner.money -= amount;
         totalCollected += amount;
@@ -776,20 +848,31 @@ export class GameEngine {
       card.choices.some(c => c.action_type);
   }
 
-  // ── Sell ──
+  // ── Upgrades ──
 
-  sellBuilding(playerId, propertyId) {
+  purchaseUpgrade(playerId, propertyId, upgradeType) {
     const gs = this.state;
     const player = gs.players.find(p => p.id === playerId);
     const square = gs.boardSquares.find(s => s.id === propertyId);
-    if (!square || square.owner !== playerId || !square.buildings || square.buildings.length === 0) return false;
-    const top = square.buildings.pop();
-    const costs = {
-      garage: Math.round(square.purchase_price * 0.5),
-      rest_stop: Math.round(square.purchase_price * 0.8),
-      market: Math.round(square.purchase_price * 1.2),
-    };
-    player.money += Math.round(costs[top] * 0.75);
+    if (!square || square.owner !== playerId) return false;
+    const key = upgradeType + '_rent';
+    const cost = square.owner_paying?.[key];
+    if (!cost || player.money < cost) return false;
+    player.money -= cost;
+    square.upgrade = upgradeType;
+    return true;
+  }
+
+  sellUpgrade(playerId, propertyId) {
+    const gs = this.state;
+    const player = gs.players.find(p => p.id === playerId);
+    const square = gs.boardSquares.find(s => s.id === propertyId);
+    if (!square || square.owner !== playerId || !square.upgrade) return false;
+    const key = square.upgrade + '_rent';
+    const cost = square.owner_paying?.[key];
+    const refund = Math.round((cost || 0) * 0.75);
+    player.money += refund;
+    square.upgrade = null;
     return true;
   }
 
@@ -798,13 +881,13 @@ export class GameEngine {
     const player = gs.players.find(p => p.id === playerId);
     const square = gs.boardSquares.find(s => s.id === propertyId);
     if (!square || square.owner !== playerId) return false;
-    while (square.buildings && square.buildings.length > 0) {
-      this.sellBuilding(playerId, propertyId);
+    if (square.upgrade) {
+      this.sellUpgrade(playerId, propertyId);
     }
     const salePrice = Math.round(square.purchase_price * 0.75);
     player.money += salePrice;
     square.owner = null;
-    square.buildings = [];
+    square.upgrade = null;
     if (player.money >= 0 && gs.isLiquidating) {
       gs.isLiquidating = false;
     }
@@ -841,6 +924,10 @@ export class GameEngine {
 
   finishTurn(skipAdvance) {
     const gs = this.state;
+    if (gs.pendingDeckDraw) {
+      gs.phase = 'draw_card';
+      return;
+    }
     if (gs.pendingClubChoice) {
       gs.phase = 'club_choice';
       return;
@@ -855,8 +942,16 @@ export class GameEngine {
         return;
       }
     }
+    if (gs.pendingRentPayment) {
+      gs.phase = 'rent_payment';
+      return;
+    }
     if (gs.pendingPropertyBuy) {
       gs.phase = 'property_choice';
+      return;
+    }
+    if (gs.pendingUpgradeChoice) {
+      gs.phase = 'upgrade_choice';
       return;
     }
     if (gs.activeCardChoice) {
@@ -905,7 +1000,7 @@ export class GameEngine {
       player.money = 0;
       gs.isLiquidating = false;
       gs.boardSquares.forEach(sq => {
-        if (sq.owner === playerId) { sq.owner = null; sq.buildings = []; }
+        if (sq.owner === playerId) { sq.owner = null; sq.upgrade = null; }
       });
       return true;
     }

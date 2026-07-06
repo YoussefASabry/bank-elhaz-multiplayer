@@ -1,0 +1,27 @@
+THEME IMAGE SLOTS — Bank El Haz Multiplayer Board
+=================================================
+
+Put images in:  multiplayer/assets/themes/theme1/
+(Plain mode uses no images — everything stays as default emoji/CSS)
+
+┌─────────────────────┬──────────────────────────────────┬────────────┬──────────┐
+│ File name           │ Slot                             │ Dimensions │ Aspect   │
+├─────────────────────┼──────────────────────────────────┼────────────┼──────────┤
+│ center-bg.png       │ Center background (behind UI)    │ 814 x 465  │ 814:465  │
+│ corner-beginning.png│ Beginning tile (p1)              │ 110 x 120  │ 11:12    │
+│ corner-club.png     │ Club of Luck (p8)                │ 110 x 120  │ 11:12    │
+│ corner-bus.png      │ Fast Bus (p18)                   │ 110 x 120  │ 11:12    │
+│ corner-prison.png   │ Prison (p25)                     │ 110 x 120  │ 11:12    │
+│ mahkama-tb.png      │ Mahkama top (p11) & bottom (p32) │  85 x 120  │ 17:24    │
+│ mahkama-right.png   │ Mahkama right edge (p21)         │ 110 x  75  │ 22:15    │
+│ hazak.png           │ Hazak top (p13) & bottom (p30)   │ 110 x 120  │ 11:12    │
+│ dual-trigger.png    │ Mahkama or Hazak (p4)            │ 110 x  75  │ 22:15    │
+│ fuel-station.png    │ Gas Station (p16)                │  85 x 120  │ 17:24    │
+│ deck-mahkama.png    │ Mahkama deck pile (center card)  │ 135 x  96  │ 45:32    │
+│ deck-hazak.png      │ Hazak deck pile (center card)    │ 135 x  96  │ 45:32    │
+└─────────────────────┴──────────────────────────────────┴────────────┴──────────┘
+
+NOTES
+- Any resolution works as long as the aspect ratio matches (images scale to fit).
+- Missing files = default rendering stays for that slot (no crash).
+- These are for multiplayer only (multiplayer/index.html).

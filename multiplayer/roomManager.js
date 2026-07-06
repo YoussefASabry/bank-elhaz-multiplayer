@@ -16,7 +16,8 @@ export class RoomManager {
     do { code = generateRoomCode(); } while (this.rooms.has(code));
     const room = {
       code,
-      players: [{ id: hostId, name: hostName, avatar: avatar || 1 }],
+      players: [{ id: hostId, name: hostName, avatar: avatar || 1, connected: true }],
+      kicked: new Set(),
       gameState: null,
       timer: null,
       trade: null,
@@ -33,10 +34,18 @@ export class RoomManager {
   joinRoom(code, playerId, playerName, avatar) {
     const room = this.rooms.get(code);
     if (!room) return { ok: false, error: 'Room not found' };
+    if (room.kicked.has(playerName)) return { ok: false, error: 'You were removed from this game' };
+    // Rejoin if player exists and is disconnected
+    const existing = room.players.find(p => p.name === playerName && !p.connected);
+    if (existing) {
+      existing.id = playerId;
+      existing.connected = true;
+      return { ok: true, room, rejoined: true };
+    }
     if (room.gameState) return { ok: false, error: 'Game already started' };
     if (room.players.length >= 6) return { ok: false, error: 'Room is full (max 6)' };
     if (room.players.find(p => p.id === playerId)) return { ok: false, error: 'Already in room' };
-    room.players.push({ id: playerId, name: playerName, avatar: avatar || 1 });
+    room.players.push({ id: playerId, name: playerName, avatar: avatar || 1, connected: true });
     return { ok: true, room };
   }
 
@@ -44,6 +53,64 @@ export class RoomManager {
     const room = this.rooms.get(code);
     if (!room) return;
     room.players = room.players.filter(p => p.id !== playerId);
+  }
+
+  disconnectPlayer(code, playerId) {
+    const room = this.rooms.get(code);
+    if (!room) return;
+    const player = room.players.find(p => p.id === playerId);
+    if (player) player.connected = false;
+    // Also update gameState player if game is active
+    if (room.gameState) {
+      const gp = room.gameState.players.find(p => p.id === playerId);
+      if (gp) gp.connected = false;
+    }
+  }
+
+  rejoinPlayer(code, oldPlayerId, newSocketId) {
+    const room = this.rooms.get(code);
+    if (!room) return null;
+    const player = room.players.find(p => p.id === oldPlayerId && !p.connected);
+    if (!player) return null;
+    player.id = newSocketId;
+    player.connected = true;
+    // Also update gameState player
+    if (room.gameState) {
+      const gp = room.gameState.players.find(p => p.id === oldPlayerId);
+      if (gp) gp.connected = true;
+    }
+    return { player, gameState: room.gameState, players: room.players };
+  }
+
+  terminatePlayer(code, hostId, targetId) {
+    const room = this.rooms.get(code);
+    if (!room) return null;
+    const host = room.players[0];
+    if (!host || host.id !== hostId) return null;
+    const idx = room.players.findIndex(p => p.id === targetId);
+    if (idx === -1) return null;
+    const target = room.players[idx];
+    if (room.gameState) {
+      const gs = room.gameState;
+      const player = gs.players.find(p => p.id === targetId);
+      if (player && !player.isBankrupt) {
+        const remaining = gs.players.filter(p => p.id !== targetId && !p.isBankrupt);
+        if (remaining.length > 0 && player.money > 0) {
+          const share = Math.floor(player.money / remaining.length);
+          remaining.forEach(p => p.money += share);
+        }
+        player.money = 0;
+        gs.boardSquares.forEach(sq => {
+          if (sq.owner === targetId) sq.owner = null;
+        });
+        player.isBankrupt = true;
+      }
+      const gsIdx = gs.players.findIndex(p => p.id === targetId);
+      if (gsIdx !== -1) gs.players.splice(gsIdx, 1);
+    }
+    room.kicked.add(target.name);
+    room.players.splice(idx, 1);
+    return { players: room.players, gameState: room.gameState };
   }
 
   destroyRoom(code) {
@@ -69,15 +136,16 @@ export class RoomManager {
 
   // ── Turn timer ──
 
-  startTurnTimer(code, io) {
+  startTurnTimer(code, io, durationSecs) {
     const room = this.rooms.get(code);
     if (!room || !room.gameState) return;
     if (room.turnTimer) clearTimeout(room.turnTimer);
-    room.gameState.timerSeconds = 90;
+    const duration = durationSecs || 90;
+    room.gameState.timerSeconds = duration;
     room.gameState.timerRunning = true;
-    io.to(code).emit('timer_sync', { seconds: 90, running: true });
+    io.to(code).emit('timer_sync', { seconds: duration, running: true });
 
-    let secs = 90;
+    let secs = duration;
     room.turnTimer = setInterval(() => {
       secs--;
       room.gameState.timerSeconds = secs;
@@ -101,9 +169,9 @@ export class RoomManager {
     }
   }
 
-  resetTurnTimer(room, code, io) {
+  resetTurnTimer(room, code, io, durationSecs) {
     this.stopTurnTimer(room);
-    this.startTurnTimer(code, io);
+    this.startTurnTimer(code, io, durationSecs);
   }
 
   autoPass(room, code, io) {
@@ -114,7 +182,11 @@ export class RoomManager {
 
     const phase = gs.phase;
     if (phase === 'roll') {
-      this.advanceTurn(room, code, io);
+      const result = this.handleRollDice(code, player.id);
+      if (result) {
+        io.to(code).emit('dice_rolled', result);
+        this.handleLanding(code, player.id, result, io);
+      }
     } else if (phase === 'club_choice') {
       this.resolveClubChoice(code, player.id, 'guest');
     } else if (phase === 'property_choice') {
@@ -125,14 +197,35 @@ export class RoomManager {
         this.finishTurn(room, code, io);
       }
     } else if (phase === 'rent_payment') {
-      gs.pendingRentPayment = null;
+      const rent = gs.pendingRentPayment;
+      if (rent) {
+        const renter = gs.players.find(p => p.id === rent.playerId);
+        const owner = gs.players.find(p => p.id === rent.ownerId);
+        if (renter) {
+          if (renter.money >= rent.amount) {
+            renter.money -= rent.amount;
+            if (owner && !owner.isBankrupt) owner.money += rent.amount;
+          } else {
+            // Can't pay — force bankruptcy
+            if (owner && renter.money > 0) {
+              owner.money += renter.money;
+              renter.money = 0;
+            }
+            gs.boardSquares.forEach(sq => {
+              if (sq.owner === renter.id) { sq.owner = null; sq.upgrade = null; }
+            });
+            renter.position = 25;
+            renter.statusEffects.missedTurnsRemaining = 5;
+          }
+        }
+        gs.pendingRentPayment = null;
+      }
       this.finishTurn(room, code, io);
     } else if (phase === 'blind_card') {
       this.resolveBlindCard(code, player.id, io);
     } else if (phase === 'card_choice') {
       this.resolveCardChoice(code, player.id, 0);
     }
-    io.to(code).emit('state_update', { gameState: gs, phase: gs.phase });
   }
 
   // ── Game actions ──
@@ -171,8 +264,22 @@ export class RoomManager {
     room.engine.evaluateLanding(player);
     io.to(code).emit('state_update', { gameState: gs, phase: gs.phase });
 
+    // Splash texts for special squares
+    const square = gs.boardSquares.find(s => s.id === player.position);
+    if (square?.id === 18) {
+      io.to(code).emit('splash_text', { text: '🚌 Fast Bus — Double Next Roll!', type: '' });
+    } else if (square?.id === 25) {
+      io.to(code).emit('splash_text', { text: '🔒 Sent to Prison!', type: 'loss' });
+    }
+
     const phase = gs.phase;
-    if (phase === 'blind_card') {
+    if (phase === 'draw_card') {
+      const deckLabel = gs.pendingDeckDraw?.deckType === 'dual' ? '⚖️ المحكمة + 🍀 حظك' :
+        gs.pendingDeckDraw?.deckType === 'mahkama' ? '⚖️ المحكمة' : '🍀 حظك';
+      io.to(code).emit('action_log', { message: `🃏 ${player.name} landed on ${deckLabel} — click a deck pile to draw!` });
+      io.to(playerId).emit('landed_on_deck', { deckLabel });
+      this.resetTurnTimer(room, code, io);
+    } else if (phase === 'blind_card') {
       const bs = this.io.to(playerId);
       bs.emit('private_card', {
         card: gs.blindCard.card,
@@ -180,15 +287,16 @@ export class RoomManager {
         squareName: gs.blindCard.squareName,
         deckType: gs.blindCard.deckType || 'hazak',
         pendingSecondCard: !!gs.pendingSecondCard,
+        cityNames: gs.blindCard.cityNames || [],
       });
       socketToRoom(io, code, playerId).emit('other_drawing', { playerName: player.name });
       this.resetTurnTimer(room, code, io);
-    } else if (phase === 'club_choice' || phase === 'card_choice') {
+    } else if (phase === 'club_choice' || phase === 'card_choice' || phase === 'upgrade_choice') {
       this.resetTurnTimer(room, code, io);
     } else if (phase === 'property_choice') {
       this.resetTurnTimer(room, code, io);
     } else if (phase === 'rent_payment') {
-      this.resetTurnTimer(room, code, io);
+      this.resetTurnTimer(room, code, io, 120);
     } else if (phase === 'done' || gs.gameOver) {
       this.advanceTurn(room, code, io);
     } else if (phase === 'roll') {
@@ -210,6 +318,16 @@ export class RoomManager {
     this.finishTurn(room, code, this.io);
   }
 
+  handleDrawCard(code, playerId, deckType) {
+    const room = this.rooms.get(code);
+    if (!room || !room.engine || !room.gameState) return null;
+    const gs = room.gameState;
+    const player = gs.players.find(p => p.id === playerId);
+    if (!player) return null;
+    if (gs.phase !== 'draw_card') return null;
+    return room.engine.handleDrawCard(playerId, deckType);
+  }
+
   resolveBlindCard(code, playerId, io) {
     const room = this.rooms.get(code);
     if (!room || !room.engine || !room.gameState) return null;
@@ -227,12 +345,25 @@ export class RoomManager {
       gs.pendingSecondCard = false;
       const card2 = room.engine.drawCard(second.deckType);
       if (card2) {
-        gs.blindCard = { card: card2, playerId, squareName: second.squareName, deckType: second.deckType, cardNumber: 2 };
+        let extra = {};
+        if (card2.action === 'collect_from_city_owners') {
+          extra = room.engine.preSelectCitiesForCard(card2);
+        }
+        gs.blindCard = { card: card2, playerId, squareName: second.squareName, deckType: second.deckType, cardNumber: 2, ...extra };
         io.to(code).emit('state_update', { gameState: gs, phase: gs.phase });
         this.io.to(playerId).emit('private_card', {
           card: card2, cardNumber: 2, squareName: second.squareName, deckType: second.deckType, pendingSecondCard: false,
+          cityNames: extra.cityNames || [],
         });
         socketToRoom(io, code, playerId).emit('other_drawing', { playerName: player.name });
+        // Also broadcast the second card to others with 2 sec delay
+        setTimeout(() => {
+          io.to(code).except(playerId).emit('public_card_draw', {
+            card: card2, cardNumber: 2, squareName: second.squareName, deckType: second.deckType,
+            pendingSecondCard: false, playerName: player.name,
+            cityNames: extra.cityNames || [],
+          });
+        }, 2000);
         return null;
       }
     }
@@ -294,10 +425,20 @@ export class RoomManager {
     this.io.to(code).emit('state_update', { gameState: gs, phase: gs.phase });
   }
 
-  sellBuilding(code, playerId, propertyId) {
+  buyUpgrade(code, playerId, propertyId, upgradeType) {
     const room = this.rooms.get(code);
     if (!room || !room.engine || !room.gameState) return;
-    room.engine.sellBuilding(playerId, propertyId);
+    const ok = room.engine.purchaseUpgrade(playerId, propertyId, upgradeType);
+    if (ok) {
+      room.gameState.pendingUpgradeChoice = null;
+    }
+    return ok;
+  }
+
+  sellUpgrade(code, playerId, propertyId) {
+    const room = this.rooms.get(code);
+    if (!room || !room.engine || !room.gameState) return;
+    room.engine.sellUpgrade(playerId, propertyId);
   }
 
   sellPropertyToBank(code, playerId, propertyId) {
@@ -428,7 +569,7 @@ export class RoomManager {
     const cash = Math.max(0, Math.min(proposal.cash || 0, player.money));
     const propIds = (proposal.propIds || []).filter(id => {
       const sq = gs.boardSquares.find(s => s.id === id);
-      return sq && sq.owner === playerId && (!sq.buildings || sq.buildings.length === 0);
+      return sq && sq.owner === playerId && (!sq.upgrade);
     });
     const jailCards = Math.max(0, Math.min(proposal.jailCards || 0, player.inventory.jailFreeCards || 0));
 
@@ -579,7 +720,7 @@ export class RoomManager {
   //  BID SYSTEM
   // ════════════════════════════════════════════
 
-  createBid(roomCode, playerId, cash, propIds) {
+  createBid(roomCode, playerId, cash, propIds, jailCards = 0) {
     const room = this.rooms.get(roomCode);
     if (!room || !room.gameState) return null;
     const gs = room.gameState;
@@ -592,10 +733,11 @@ export class RoomManager {
     const validCash = Math.max(0, Math.min(cash || 0, player.money));
     const validProps = (propIds || []).filter(id => {
       const sq = gs.boardSquares.find(s => s.id === id);
-      return sq && sq.owner === playerId && (!sq.buildings || sq.buildings.length === 0);
+      return sq && sq.owner === playerId && (!sq.upgrade);
     });
+    const validJail = Math.max(0, Math.min(jailCards || 0, player.inventory.jailFreeCards || 0));
 
-    if (validCash === 0 && validProps.length === 0) return null;
+    if (validCash === 0 && validProps.length === 0 && validJail === 0) return null;
 
     const bid = {
       id: Date.now().toString(36) + Math.random().toString(36).substring(2, 4),
@@ -604,6 +746,7 @@ export class RoomManager {
       avatar: player.avatar,
       cash: validCash,
       propIds: validProps,
+      jailCards: validJail,
       offers: [],
       createdAt: Date.now(),
     };
@@ -613,7 +756,7 @@ export class RoomManager {
     return bid;
   }
 
-  respondToBid(roomCode, bidId, playerId, cash, propIds) {
+  respondToBid(roomCode, bidId, playerId, cash, propIds, jailCards = 0) {
     const room = this.rooms.get(roomCode);
     if (!room || !room.gameState) return null;
     const gs = room.gameState;
@@ -628,10 +771,11 @@ export class RoomManager {
     const validCash = Math.max(0, Math.min(cash || 0, player.money));
     const validProps = (propIds || []).filter(id => {
       const sq = gs.boardSquares.find(s => s.id === id);
-      return sq && sq.owner === playerId && (!sq.buildings || sq.buildings.length === 0);
+      return sq && sq.owner === playerId && (!sq.upgrade);
     });
+    const validJail = Math.max(0, Math.min(jailCards || 0, player.inventory.jailFreeCards || 0));
 
-    if (validCash === 0 && validProps.length === 0) return null;
+    if (validCash === 0 && validProps.length === 0 && validJail === 0) return null;
 
     const offer = {
       id: Date.now().toString(36) + Math.random().toString(36).substring(2, 4),
@@ -640,6 +784,7 @@ export class RoomManager {
       avatar: player.avatar,
       cash: validCash,
       propIds: validProps,
+      jailCards: validJail,
     };
 
     bid.offers.push(offer);
@@ -665,13 +810,15 @@ export class RoomManager {
     // Validate funds
     if (bid.cash > bidder.money || offer.cash > offerer.money) return null;
 
-    // Execute bid: bidder gives cash+props to offerer, offerer gives cash+props to bidder
+    // Execute bid: bidder gives cash+props+jail to offerer, offerer gives cash+props+jail to bidder
     bidder.money -= bid.cash;
     offerer.money += bid.cash;
     bid.propIds.forEach(pid => {
       const sq = gs.boardSquares.find(s => s.id === pid);
       if (sq && sq.owner === bidder.id) sq.owner = offerer.id;
     });
+    bidder.inventory.jailFreeCards = (bidder.inventory.jailFreeCards || 0) - (bid.jailCards || 0);
+    offerer.inventory.jailFreeCards = (offerer.inventory.jailFreeCards || 0) + (bid.jailCards || 0);
 
     offerer.money -= offer.cash;
     bidder.money += offer.cash;
@@ -679,6 +826,8 @@ export class RoomManager {
       const sq = gs.boardSquares.find(s => s.id === pid);
       if (sq && sq.owner === offerer.id) sq.owner = bidder.id;
     });
+    offerer.inventory.jailFreeCards = (offerer.inventory.jailFreeCards || 0) - (offer.jailCards || 0);
+    bidder.inventory.jailFreeCards = (bidder.inventory.jailFreeCards || 0) + (offer.jailCards || 0);
 
     gs.activeBids = gs.activeBids.filter(b => b.id !== bidId);
     return { bidderName: bidder.name, offererName: offerer.name };
