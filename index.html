@@ -270,6 +270,9 @@
     .center-cell .cc-prison span { font-size: 0.75rem; color: #ff9800; font-weight: bold; }
     .center-cell .cc-prison .btn { padding: 4px 10px; font-size: 0.75rem; }
     .center-cell .cc-title { font-size: 0.8rem; color: #5a3a0a; font-weight: bold; }
+    .center-cell .cc-log { font-size: 0.6rem; color: #5a3a0a; width: 100%; max-height: 44px; overflow-y: auto; text-align: center; line-height: 1.35; flex-shrink: 0; scrollbar-width: thin; }
+    .center-cell .cc-log::-webkit-scrollbar { width: 3px; }
+    .center-cell .cc-log::-webkit-scrollbar-thumb { background: #c4a96a; border-radius: 2px; }
     .center-cell .turn-banner { font-size: 1rem; color: #ffd700; font-weight: bold; text-shadow: 0 0 10px rgba(255,215,0,0.5); padding: 2px 0; }
     .moving-car { position: fixed; z-index: 50; pointer-events: none; font-size: 2.4rem; display: none; filter: drop-shadow(0 3px 8px rgba(0,0,0,0.5)); transition: none; }
     .moving-car img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid #ffd700; }
@@ -1347,6 +1350,14 @@
   socket.on('action_log', (data) => {
     log(data.message);
     showToast(data.message);
+    const panel = document.getElementById('cc-log');
+    if (panel) {
+      const entry = document.createElement('div');
+      entry.textContent = data.message;
+      panel.appendChild(entry);
+      panel.scrollTop = panel.scrollHeight;
+      while (panel.children.length > 12) panel.removeChild(panel.firstChild);
+    }
   });
 
   socket.on('landed_on_deck', (data) => {
@@ -1970,6 +1981,7 @@
         <button class="btn btn-bail" onclick="payBail()">💰 Bail ($50)</button>
         <button class="btn btn-jailfree" id="btn-use-jailfree" onclick="useJailFree()" style="display:none">🔓 Jail-Free</button>
       </div>
+      <div class="cc-log" id="cc-log"></div>
       <div class="cc-title">🏦 بنك الحظ</div>
       <div class="deck-count" id="deck-count"></div>
     `;
