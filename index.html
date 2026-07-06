@@ -135,6 +135,12 @@
     .player-corner.corner-br { bottom: 16px; right: 16px; }
     .player-corner.corner-tc { top: 100px; left: 50%; transform: translateX(-50%); }
     .player-corner.corner-bc { bottom: 16px; left: 50%; transform: translateX(-50%); }
+    .player-corner.corner-lt { top: 33%; left: 16px; transform: translateY(-50%); }
+    .player-corner.corner-lc { top: 50%; left: 16px; transform: translateY(-50%); }
+    .player-corner.corner-lb { top: 67%; left: 16px; transform: translateY(-50%); }
+    .player-corner.corner-rt { top: 33%; right: 16px; transform: translateY(-50%); }
+    .player-corner.corner-rc { top: 50%; right: 16px; transform: translateY(-50%); }
+    .player-corner.corner-rb { top: 67%; right: 16px; transform: translateY(-50%); }
 
 
 
@@ -474,8 +480,18 @@
     /* Turn glow on current player card */
     .player-card.current { border-color: #ffd700 !important; background: #f5e0b0 !important; box-shadow: 0 0 8px rgba(255,215,0,0.4); }
 
-    @media (max-width: 1200px) { #board { transform: scale(0.65); transform-origin: center center; } .player-corner { transform: scale(0.9); } }
-    @media (max-width: 800px) { #board { transform: scale(0.5); transform-origin: center center; } .player-corner { padding: 8px 10px; min-width: 140px; font-size: 0.75rem; } }
+    @media (max-width: 1200px) {
+      #board { transform: scale(0.65); transform-origin: center center; }
+      .player-corner { transform: scale(0.9); }
+      .player-corner.corner-lt, .player-corner.corner-lc, .player-corner.corner-lb { transform: translateY(-50%) scale(0.9); }
+      .player-corner.corner-rt, .player-corner.corner-rc, .player-corner.corner-rb { transform: translateY(-50%) scale(0.9); }
+    }
+    @media (max-width: 800px) {
+      #board { transform: scale(0.5); transform-origin: center center; }
+      .player-corner { padding: 8px 10px; min-width: 140px; font-size: 0.75rem; }
+      .player-corner.corner-lt, .player-corner.corner-lc, .player-corner.corner-lb { transform: translateY(-50%) scale(0.9); }
+      .player-corner.corner-rt, .player-corner.corner-rc, .player-corner.corner-rb { transform: translateY(-50%) scale(0.9); }
+    }
 
     /* ════════════════════════════════════════
        TRADE V2 — mutual proposal panels
@@ -3276,8 +3292,10 @@
     if (count <= 2) return ['corner-tl', 'corner-br'];
     if (count === 3) return ['corner-tc', 'corner-bl', 'corner-br'];
     if (count === 4) return ['corner-tl', 'corner-tr', 'corner-bl', 'corner-br'];
-    if (count === 5) return ['corner-tl', 'corner-tr', 'corner-tc', 'corner-bl', 'corner-br'];
-    return ['corner-tl', 'corner-tr', 'corner-tc', 'corner-bl', 'corner-br', 'corner-bc'];
+    if (count === 5) return ['corner-tl', 'corner-tr', 'corner-bl', 'corner-br', 'corner-lc'];
+    if (count === 6) return ['corner-tl', 'corner-tr', 'corner-bl', 'corner-br', 'corner-lc', 'corner-rc'];
+    if (count === 7) return ['corner-tl', 'corner-tr', 'corner-bl', 'corner-br', 'corner-lt', 'corner-lc', 'corner-rc'];
+    return ['corner-tl', 'corner-tr', 'corner-bl', 'corner-br', 'corner-lt', 'corner-lb', 'corner-rt', 'corner-rc'];
   }
 
   function getBidCorner(playerId, state) {
