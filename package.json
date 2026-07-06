@@ -2,13 +2,22 @@
   "name": "bank-elhaz",
   "version": "1.0.0",
   "type": "module",
-  "description": "Bank El Haz board game engine",
+  "description": "Bank El Haz — Online multiplayer (also includes local hot-seat)",
   "scripts": {
-    "dev": "vite",
+    "dev": "node -e \"import('child_process').then(({spawn})=>{const s=spawn('node',['server.js'],{stdio:'inherit'});const c=spawn('npx',['vite','--port','5173'],{stdio:'inherit'});process.on('SIGINT',()=>{s.kill();c.kill();process.exit()})})\"",
+    "server": "node server.js",
+    "client": "vite --port 5173",
+    "build": "vite build",
+    "start": "npm run build && node server.js",
     "preview": "vite preview",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "hotseat": "vite --open /hotseat.html"
   },
   "private": true,
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
+    "socket.io": "^4.7.5"
+  },
   "devDependencies": {
     "vite": "^6.3.3"
   }

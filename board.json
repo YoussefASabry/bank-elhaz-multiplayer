@@ -2,8 +2,7 @@
   "game_meta": {
     "title": "بنك الحظ",
     "starting_cash_player": 1200,
-    "pass_go_salary": 350,
-    "bank_manager_bonus": 50,
+    "pass_go_salary": 250,
     "max_players": 6,
     "min_players": 3
   },
