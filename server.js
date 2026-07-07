@@ -390,9 +390,8 @@ io.on('connection', (socket) => {
       socket.emit('trade_error', { message: `⏳ Wait ${result.waitSec}s before trading again` });
       return;
     }
-    // Send to both participants
-    io.to(roomCode).emit('trade_opened', result);
-    actionLog(roomCode, `🤝 ${result.initiator.name} opened a trade with ${result.partner.name}`);
+    // Send to both participants only
+    io.to(result.initiator.id).to(result.partner.id).emit('trade_opened', result);
   });
 
   socket.on('decline_trade_request', ({ roomCode, initiatorId }) => {
@@ -409,24 +408,24 @@ io.on('connection', (socket) => {
 
   socket.on('trade_send_proposal', ({ roomCode, cash, propIds, jailCards }) => {
     const room = manager.getRoom(roomCode);
-    if (!room || !room.gameState || !room.trade) return;
+    if (!room || !room.gameState || !manager.playerInTrade(room, socket.id)) return;
     const result = manager.sendTradeProposal(roomCode, socket.id, { cash, propIds, jailCards });
     if (!result) return;
-    // Send updated trade state to both
-    io.to(roomCode).emit('trade_state_update', result);
+    // Send updated trade state to participants only
+    const parts = result._participants || [];
+    if (parts.length === 2) io.to(parts[0]).to(parts[1]).emit('trade_state_update', result);
     const sender = room.gameState.players.find(p => p.id === socket.id);
-    if (sender) actionLog(roomCode, `📨 ${sender.name} sent a trade proposal`);
   });
 
   socket.on('trade_accept_proposal', ({ roomCode }) => {
     const room = manager.getRoom(roomCode);
-    if (!room || !room.gameState || !room.trade) return;
+    if (!room || !room.gameState || !manager.playerInTrade(room, socket.id)) return;
     const result = manager.acceptTradeProposal(roomCode, socket.id);
     if (!result) return;
     if (result.aName) {
+      // Trade executed - broadcast to all
       io.to(roomCode).emit('trade_executed', result);
       actionLog(roomCode, `🤝 Trade executed between ${result.aName} and ${result.bName}!`);
-      // If rent is due and trade is between renter and owner, waive rent
       const gs = room.gameState;
       if (gs.pendingRentPayment) {
         const { playerId: renterId, ownerId } = gs.pendingRentPayment;
@@ -437,7 +436,9 @@ io.on('connection', (socket) => {
       }
       broadcastState(roomCode);
     } else {
-      io.to(roomCode).emit('trade_state_update', result);
+      // Send to participants only
+      const parts = result._participants || [];
+      if (parts.length === 2) io.to(parts[0]).to(parts[1]).emit('trade_state_update', result);
       const accepter = room.gameState.players.find(p => p.id === socket.id);
       if (accepter) actionLog(roomCode, `✅ ${accepter.name} accepted a proposal`);
     }
@@ -445,10 +446,11 @@ io.on('connection', (socket) => {
 
   socket.on('trade_decline_proposal', ({ roomCode }) => {
     const room = manager.getRoom(roomCode);
-    if (!room || !room.gameState || !room.trade) return;
+    if (!room || !room.gameState || !manager.playerInTrade(room, socket.id)) return;
     const result = manager.declineTradeProposal(roomCode, socket.id);
     if (!result) return;
-    io.to(roomCode).emit('trade_state_update', result);
+    const parts = result._participants || [];
+    if (parts.length === 2) io.to(parts[0]).to(parts[1]).emit('trade_state_update', result);
     const decliner = room.gameState.players.find(p => p.id === socket.id);
     if (decliner) actionLog(roomCode, `❌ ${decliner.name} declined the proposal`);
   });
@@ -458,12 +460,11 @@ io.on('connection', (socket) => {
     if (!room || !room.gameState) return;
     const result = manager.cancelTrade(roomCode, socket.id);
     if (result) {
-      // If there's a pending rent payment, restore rent_payment phase
       if (room.gameState.pendingRentPayment) {
         room.gameState.phase = 'rent_payment';
       }
-      io.to(roomCode).emit('trade_cancelled', result);
-      actionLog(roomCode, `🚫 Trade cancelled`);
+      const parts = result._participants || [];
+      if (parts.length === 2) io.to(parts[0]).to(parts[1]).emit('trade_cancelled', result);
       broadcastState(roomCode);
     }
   });
@@ -558,6 +559,35 @@ io.on('connection', (socket) => {
   });
 
   // ── Reconnection ──
+
+  socket.on('restore_game', ({ roomCode, playerName, playerId, gameState }) => {
+    let room = manager.getRoom(roomCode);
+    if (!room) {
+      room = manager.createRoomFromState(roomCode, gameState);
+      if (!room) { socket.emit('restore_game_result', { success: false, error: 'Failed to create room' }); return; }
+    }
+    // Find or create the player slot
+    let player = room.players.find(p => p.name === playerName);
+    if (!player) {
+      player = { name: playerName, id: socket.id, connected: true, avatar: 1 };
+      room.players.push(player);
+    } else {
+      const oldId = player.id;
+      player.id = socket.id;
+      player.connected = true;
+      if (room.gameState) {
+        const gp = room.gameState.players.find(p => p.id === oldId);
+        if (gp) { gp.id = socket.id; gp.connected = true; }
+      }
+    }
+    socket.join(roomCode);
+    io.to(roomCode).emit('player_reconnected', { playerId: socket.id, players: room.players });
+    socket.emit('restore_game_result', { success: true, roomCode, playerId: socket.id, gameState: room.gameState });
+    if (room.gameState) {
+      manager.stopTurnTimer(room);
+      manager.startTurnTimer(roomCode, io);
+    }
+  });
 
   socket.on('rejoin_game', ({ roomCode, playerName }) => {
     const room = manager.getRoom(roomCode);

@@ -337,6 +337,7 @@ export class GameEngine {
         this.finishTurn();
         break;
       case 8:
+        if (player.isClubMember) { this.finishTurn(); break; }
         gs.pendingClubChoice = {
           playerId: player.id,
           membershipCost: square.membership_cost,
@@ -593,7 +594,8 @@ export class GameEngine {
         const available = poolOptions
           .map(id => gs.boardSquares.find(s => s.id === id))
           .filter(Boolean)
-          .filter(s => !unownedOnly || s.owner === null);
+          .filter(s => !unownedOnly || s.owner === null)
+          .filter(s => s.purchase_price <= cashAmount);
 
         const opts = [
           { action: 'cash', label: `💰 خذ ${cashAmount} جنيه من البنك`, amount: cashAmount },

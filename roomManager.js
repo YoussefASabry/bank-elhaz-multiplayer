@@ -11,6 +11,17 @@ export class RoomManager {
     this.tradeRateLimits = new Map();
   }
 
+  findTrade(room, playerId1, playerId2) {
+    const tid = [playerId1, playerId2].sort().join(':');
+    return (room.trades || []).find(t => {
+      const tkey = [t.players.a, t.players.b].sort().join(':');
+      return tkey === tid;
+    }) || null;
+  }
+  playerInTrade(room, playerId) {
+    return (room.trades || []).find(t => t.players.a === playerId || t.players.b === playerId) || null;
+  }
+
   createRoom(hostId, hostName, avatar) {
     let code;
     do { code = generateRoomCode(); } while (this.rooms.has(code));
@@ -20,7 +31,22 @@ export class RoomManager {
       kicked: new Set(),
       gameState: null,
       timer: null,
-      trade: null,
+      trades: [],
+      turnTimer: null,
+    };
+    this.rooms.set(code, room);
+    return room;
+  }
+
+  createRoomFromState(code, gameState) {
+    if (this.rooms.has(code)) return null;
+    const room = {
+      code,
+      players: [],
+      kicked: new Set(),
+      gameState,
+      timer: null,
+      trades: [],
       turnTimer: null,
     };
     this.rooms.set(code, room);
@@ -117,7 +143,7 @@ export class RoomManager {
     const room = this.rooms.get(code);
     if (room) {
       if (room.turnTimer) clearTimeout(room.turnTimer);
-      if (room.trade?.timer) clearTimeout(room.trade.timer);
+      (room.trades || []).forEach(t => { if (t.timer) clearTimeout(t.timer); });
       this.rooms.delete(code);
     }
   }
@@ -510,7 +536,7 @@ export class RoomManager {
   initTrade(code, initiatorId, partnerId) {
     const room = this.rooms.get(code);
     if (!room || !room.gameState) return null;
-    if (room.trade) return null;
+    if (this.playerInTrade(room, initiatorId) || this.playerInTrade(room, partnerId)) return null;
     const gs = room.gameState;
     const initiator = gs.players.find(p => p.id === initiatorId);
     const partner = gs.players.find(p => p.id === partnerId);
@@ -520,7 +546,7 @@ export class RoomManager {
     if (!rateCheck.ok) return { error: 'rate_limited', waitSec: rateCheck.waitSec };
 
     const tradeId = Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
-    room.trade = {
+    const trade = {
       id: tradeId,
       players: { a: initiatorId, b: partnerId },
       proposalA: null,
@@ -531,8 +557,10 @@ export class RoomManager {
       createdAt: Date.now(),
       timer: null,
     };
+    if (!room.trades) room.trades = [];
+    room.trades.push(trade);
 
-    this.startTradeTimer(room, code, 60);
+    this.startTradeTimer(room, code, trade, 60);
 
     return {
       tradeId,
@@ -545,18 +573,25 @@ export class RoomManager {
     };
   }
 
-  startTradeTimer(room, code, seconds) {
-    if (room.trade.timer) clearTimeout(room.trade.timer);
-    room.trade.timer = setTimeout(() => {
-      this.cancelTrade(code, null, 'timeout');
+  startTradeTimer(room, code, trade, seconds) {
+    if (trade.timer) clearTimeout(trade.timer);
+    const tradeId = trade.id;
+    trade.timer = setTimeout(() => {
+      const t = (room.trades || []).find(tr => tr.id === tradeId);
+      if (t) {
+        if (t.timer) clearTimeout(t.timer);
+        room.trades = (room.trades || []).filter(tr => tr.id !== tradeId);
+      }
+      this.io.to(trade.players.a).to(trade.players.b).emit('trade_cancelled', { reason: 'timeout' });
     }, seconds * 1000);
-    this.io.to(code).emit('trade_timer_sync', { seconds, running: true });
+    this.io.to(trade.players.a).to(trade.players.b).emit('trade_timer_sync', { seconds, running: true });
   }
 
   sendTradeProposal(code, playerId, proposal) {
     const room = this.rooms.get(code);
-    if (!room || !room.trade || !room.gameState) return null;
-    const tr = room.trade;
+    if (!room || !room.gameState) return null;
+    const tr = this.playerInTrade(room, playerId);
+    if (!tr) return null;
     const gs = room.gameState;
 
     const isA = playerId === tr.players.a;
@@ -583,7 +618,7 @@ export class RoomManager {
       tr.state = 'reviewing_a';
     }
 
-    this.resetTradeTimer(room, code);
+    this.resetTradeTimer(room, code, tr);
 
     return {
       tradeId: tr.id,
@@ -593,26 +628,28 @@ export class RoomManager {
       acceptedA: tr.acceptedA,
       acceptedB: tr.acceptedB,
       fromPlayerId: playerId,
+      _participants: [tr.players.a, tr.players.b],
     };
   }
 
   acceptTradeProposal(code, playerId) {
     const room = this.rooms.get(code);
-    if (!room || !room.trade || !room.gameState) return null;
-    const tr = room.trade;
+    if (!room || !room.gameState) return null;
+    const tr = this.playerInTrade(room, playerId);
+    if (!tr) return null;
 
     if (tr.state === 'reviewing_b' && playerId === tr.players.b) {
       tr.acceptedB = true;
       tr.state = 'proposing_b';
-      return { tradeId: tr.id, state: tr.state, accepted: true, side: 'b' };
+      return { tradeId: tr.id, state: tr.state, accepted: true, side: 'b', _participants: [tr.players.a, tr.players.b] };
     }
 
     if (tr.state === 'reviewing_a' && playerId === tr.players.a) {
       tr.acceptedA = true;
       if (tr.proposalA && tr.proposalB && tr.acceptedA && tr.acceptedB) {
-        return this.executeTrade(code);
+        return this.executeTrade(code, tr);
       }
-      return { tradeId: tr.id, state: tr.state, accepted: true, side: 'a' };
+      return { tradeId: tr.id, state: tr.state, accepted: true, side: 'a', _participants: [tr.players.a, tr.players.b] };
     }
 
     return null;
@@ -620,17 +657,18 @@ export class RoomManager {
 
   declineTradeProposal(code, playerId) {
     const room = this.rooms.get(code);
-    if (!room || !room.trade) return null;
-    const tr = room.trade;
+    if (!room) return null;
+    const tr = this.playerInTrade(room, playerId);
+    if (!tr) return null;
 
     if (tr.state === 'reviewing_b' && playerId === tr.players.b) {
       tr.state = 'proposing_a';
-      return { tradeId: tr.id, state: tr.state, declined: true, side: 'b' };
+      return { tradeId: tr.id, state: tr.state, declined: true, side: 'b', _participants: [tr.players.a, tr.players.b] };
     }
 
     if (tr.state === 'reviewing_a' && playerId === tr.players.a) {
       tr.state = 'proposing_b';
-      return { tradeId: tr.id, state: tr.state, declined: true, side: 'a' };
+      return { tradeId: tr.id, state: tr.state, declined: true, side: 'a', _participants: [tr.players.a, tr.players.b] };
     }
 
     return null;
@@ -638,25 +676,26 @@ export class RoomManager {
 
   cancelTrade(code, playerId, reason = 'cancelled') {
     const room = this.rooms.get(code);
-    if (!room || !room.trade) return null;
-    if (playerId && room.trade.players.a !== playerId && room.trade.players.b !== playerId) return null;
+    if (!room) return null;
+    // Find any trade involving this player
+    const tr = playerId ? this.playerInTrade(room, playerId) : (room.trades && room.trades.length > 0 ? room.trades[0] : null);
+    if (!tr) return null;
 
-    if (room.trade.timer) clearTimeout(room.trade.timer);
-    room.trade = null;
-    return { reason };
+    if (tr.timer) clearTimeout(tr.timer);
+    if (room.trades) room.trades = room.trades.filter(t => t !== tr);
+    return { reason, _participants: [tr.players.a, tr.players.b] };
   }
 
-  resetTradeTimer(room, code) {
-    if (room.trade?.timer) {
-      clearTimeout(room.trade.timer);
-      this.startTradeTimer(room, code, 60);
+  resetTradeTimer(room, code, tr) {
+    if (tr?.timer) {
+      clearTimeout(tr.timer);
+      this.startTradeTimer(room, code, tr, 60);
     }
   }
 
-  executeTrade(code) {
+  executeTrade(code, tr) {
     const room = this.rooms.get(code);
-    if (!room || !room.trade || !room.gameState) return null;
-    const tr = room.trade;
+    if (!room || !room.gameState || !tr) return null;
     const gs = room.gameState;
 
     if (!tr.proposalA || !tr.proposalB) return null;
@@ -665,16 +704,14 @@ export class RoomManager {
     const pB = gs.players.find(p => p.id === tr.players.b);
     if (!pA || !pB) {
       if (tr.timer) clearTimeout(tr.timer);
-      room.trade = null;
+      if (room.trades) room.trades = room.trades.filter(t => t !== tr);
       return null;
     }
 
-    // Validate funds
     const aCost = tr.proposalA.cash;
     const bCost = tr.proposalB.cash;
     if (aCost > pA.money || bCost > pB.money) return null;
 
-    // Execute A's proposal (A gives stuff to B)
     pA.money -= tr.proposalA.cash;
     pB.money += tr.proposalA.cash;
     tr.proposalA.propIds.forEach(pid => {
@@ -684,7 +721,6 @@ export class RoomManager {
     pA.inventory.jailFreeCards = Math.max(0, (pA.inventory.jailFreeCards || 0) - tr.proposalA.jailCards);
     pB.inventory.jailFreeCards = (pB.inventory.jailFreeCards || 0) + tr.proposalA.jailCards;
 
-    // Execute B's proposal (B gives stuff to A)
     pB.money -= tr.proposalB.cash;
     pA.money += tr.proposalB.cash;
     tr.proposalB.propIds.forEach(pid => {
@@ -696,15 +732,16 @@ export class RoomManager {
 
     tr.state = 'executed';
     if (tr.timer) clearTimeout(tr.timer);
-    room.trade = null;
+    if (room.trades) room.trades = room.trades.filter(t => t !== tr);
 
-    return { aName: pA.name, bName: pB.name, aId: pA.id, bId: pB.id };
+    return { aName: pA.name, bName: pB.name, aId: pA.id, bId: pB.id, _participants: [pA.id, pB.id] };
   }
 
-  getTradeState(code) {
+  getTradeState(code, playerId) {
     const room = this.rooms.get(code);
-    if (!room || !room.trade) return null;
-    const tr = room.trade;
+    if (!room) return null;
+    const tr = playerId ? this.playerInTrade(room, playerId) : null;
+    if (!tr) return null;
     return {
       tradeId: tr.id,
       players: tr.players,
