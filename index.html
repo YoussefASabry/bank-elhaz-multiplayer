@@ -502,77 +502,100 @@
       .player-corner.corner-rt, .player-corner.corner-rc, .player-corner.corner-rb { transform: translateY(-50%) scale(0.9); }
     }
 
-    /* Mobile landscape: thin player cards at edges, board fits */
+    /* Mobile landscape: big map, compact edge player cards */
     @media (orientation: landscape) and (max-height: 600px) {
-      #board { transform: scale(0.4); transform-origin: center center; }
-      .player-corner { padding: 4px 8px; min-width: 100px; max-width: 140px; font-size: 0.6rem; gap: 3px; border-radius: 8px; }
-      .player-corner .pc-header { font-size: 0.7rem; gap: 4px; }
-      .player-corner .pc-header img { width: 20px; height: 20px; }
-      .player-corner .pc-money { font-size: 0.75rem; padding: 2px 4px; }
-      .player-corner .pc-props { font-size: 0.55rem; max-height: 40px; gap: 2px; }
-      .player-corner .pc-props .mini-card { padding: 1px 4px; font-size: 0.55rem; }
-      .player-corner .pc-status { font-size: 0.6rem; }
-      .center-cell { padding: 8px 4px 2px; }
-      .center-cell .cc-actions .btn { padding: 18px 40px; font-size: 1.9rem; }
-      .center-cell .center-pfp { width: 90px; height: 90px; }
-      .center-cell .center-dice .die { width: 100px; height: 100px; font-size: 3rem; }
-      .btn { padding: 8px 18px; font-size: 0.85rem; }
-      .cell { font-size: 0.5rem; }
-      .cell .cell-city { font-size: 0.45rem; }
-      .cell .cell-price-section { font-size: 0.4rem; }
-      #build-mgmt { max-height: 80px; font-size: 0.6rem; }
-      .modal-box { max-width: 300px; padding: 12px; }
-      #toast-container { max-height: 36px; }
-      .toast { font-size: 0.5rem; padding: 1px 4px; }
+      #board { transform: scale(0.5); transform-origin: center center; }
+      .player-corner { padding: 6px 12px; min-width: 130px; max-width: 170px; font-size: 0.7rem; gap: 4px; border-radius: 10px; }
+      .player-corner .pc-header { font-size: 0.85rem; gap: 5px; }
+      .player-corner .pc-header img { width: 26px; height: 26px; }
+      .player-corner .pc-money { font-size: 0.9rem; padding: 3px 6px; }
+      .player-corner .pc-props { font-size: 0.65rem; max-height: 50px; gap: 3px; }
+      .player-corner .pc-props .mini-card { padding: 2px 6px; font-size: 0.65rem; }
+      .player-corner .pc-status { font-size: 0.7rem; }
+      .player-corner .mini-inv-badge { font-size: 0.65rem; padding: 2px 5px; }
+      .center-cell { padding: 10px 6px 4px; }
+      .center-cell .cc-actions .btn { padding: 14px 36px; font-size: 1.5rem; }
+      .center-cell .center-pfp { width: 80px; height: 80px; }
+      .center-cell .center-dice .die { width: 80px; height: 80px; font-size: 2.6rem; }
+      .center-cell .cc-timer { font-size: 1.4rem; padding: 5px 14px; }
+      .center-cell .cc-timer .timer-fill { width: 80px; height: 12px; }
+      .center-cell .turn-banner { font-size: 1.6rem; }
+      .btn { padding: 10px 22px; font-size: 0.95rem; }
+      .cell { font-size: 0.55rem; }
+      .cell .cell-city { font-size: 0.5rem; }
+      .cell .cell-price-section { font-size: 0.45rem; }
+      .cell .players-here .ptoken { width: 16px; height: 16px; }
+      .deck-pile .card-back { font-size: 1.6rem; }
+      #build-mgmt { max-height: 100px; font-size: 0.7rem; }
+      .modal-box { max-width: 340px; padding: 14px; }
+      #toast-container { max-height: 40px; }
+      .toast { font-size: 0.55rem; padding: 2px 6px; }
     }
     @media (orientation: landscape) and (max-height: 450px) {
-      #board { transform: scale(0.3); }
-      .player-corner { min-width: 80px; max-width: 100px; font-size: 0.5rem; padding: 2px 6px; }
-      .player-corner .pc-header { font-size: 0.6rem; }
-      .player-corner .pc-header img { width: 16px; height: 16px; }
-      .player-corner .pc-money { font-size: 0.6rem; }
-      .center-cell .cc-actions .btn { padding: 28px 60px; font-size: 2.2rem; }
-      .center-cell .center-dice .die { width: 120px; height: 120px; font-size: 4rem; }
-      .center-cell .center-pfp { width: 120px; height: 120px; }
-      .btn { padding: 5px 12px; font-size: 0.7rem; }
+      #board { transform: scale(0.4); }
+      .player-corner { min-width: 100px; max-width: 130px; font-size: 0.6rem; padding: 4px 8px; }
+      .player-corner .pc-header { font-size: 0.7rem; }
+      .player-corner .pc-header img { width: 20px; height: 20px; }
+      .player-corner .pc-money { font-size: 0.7rem; }
+      .player-corner .pc-props { max-height: 36px; font-size: 0.55rem; }
+      .player-corner .pc-props .mini-card { padding: 1px 5px; font-size: 0.55rem; }
+      .player-corner .pc-status { font-size: 0.55rem; }
+      .player-corner .mini-inv-badge { font-size: 0.55rem; padding: 1px 4px; }
+      .center-cell { padding: 6px 4px 2px; }
+      .center-cell .cc-actions .btn { padding: 18px 40px; font-size: 1.6rem; }
+      .center-cell .center-dice .die { width: 90px; height: 90px; font-size: 3rem; }
+      .center-cell .center-pfp { width: 90px; height: 90px; }
+      .center-cell .cc-timer { font-size: 1.5rem; padding: 4px 12px; }
+      .center-cell .cc-timer .timer-fill { width: 72px; height: 10px; }
+      .center-cell .turn-banner { font-size: 1.4rem; }
+      .btn { padding: 7px 16px; font-size: 0.8rem; }
+      .cell { font-size: 0.45rem; }
+      .cell .cell-city { font-size: 0.4rem; }
+      .cell .cell-price-section { font-size: 0.4rem; }
+      .cell .players-here .ptoken { width: 12px; height: 12px; }
+      .deck-pile .card-back { font-size: 1.3rem; }
+      #build-mgmt { max-height: 70px; font-size: 0.6rem; }
+      .modal-box { max-width: 300px; padding: 10px; }
+      #toast-container { max-height: 32px; }
+      .toast { font-size: 0.5rem; padding: 1px 4px; }
     }
 
-    /* Mobile portrait: board on upper portion, compact controls below */
+    /* Mobile portrait: board fills top half+, compact controls in bottom half */
     @media (orientation: portrait) and (max-width: 600px) {
       #game-container { overflow-y: auto; }
-      .game-layout { display: block; position: relative; height: 100vh; overflow-y: visible; padding-top: 173px; }
-      #board { position: absolute; top: 0; left: 50%; transform: translateX(-50%) scale(0.35); transform-origin: top center; margin: 0; z-index: 1; }
-      #player-corners { position: relative; width: 100%; height: auto; display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; padding: 4px; top: auto; left: auto; pointer-events: auto; }
-      .player-corner { position: relative; top: auto !important; left: auto !important; right: auto !important; bottom: auto !important; transform: none !important; min-width: 0; max-width: none; width: calc(33% - 4px); padding: 3px 5px; font-size: 0.5rem; gap: 2px; border-radius: 6px; }
-      .player-corner .pc-header { font-size: 0.55rem; gap: 2px; }
-      .player-corner .pc-header img { width: 16px; height: 16px; }
-      .player-corner .pc-money { font-size: 0.55rem; padding: 1px 4px; }
+      .game-layout { display: block; position: relative; height: 100vh; overflow-y: visible; padding-top: 410px; }
+      #board { position: absolute; top: 0; left: 50%; transform: translateX(-50%) scale(0.56); transform-origin: top center; margin: 0; z-index: 1; }
+      #player-corners { position: relative; width: 100%; height: auto; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; padding: 6px 4px; top: auto; left: auto; pointer-events: auto; }
+      .player-corner { position: relative; top: auto !important; left: auto !important; right: auto !important; bottom: auto !important; transform: none !important; min-width: 0; max-width: none; width: calc(50% - 6px); padding: 5px 8px; font-size: 0.65rem; gap: 3px; border-radius: 8px; }
+      .player-corner .pc-header { font-size: 0.7rem; gap: 3px; }
+      .player-corner .pc-header img { width: 22px; height: 22px; }
+      .player-corner .pc-money { font-size: 0.7rem; padding: 2px 5px; }
       .player-corner .pc-props { display: none; }
-      .player-corner .pc-status { font-size: 0.45rem; }
-      .player-corner .mini-inv-badge { font-size: 0.45rem; padding: 1px 3px; }
-      .center-cell { padding: 6px 4px 2px; }
-      .center-cell .center-pfp { width: 100px; height: 100px; }
-      .center-cell .center-dice .die { width: 100px; height: 100px; font-size: 3.4rem; }
-      .center-cell .cc-actions .btn { padding: 24px 50px; font-size: 2rem; }
-      .center-cell .cc-timer { font-size: 1.8rem; padding: 6px 16px; }
-      .center-cell .cc-timer .timer-fill { width: 100px; height: 14px; }
-      .center-cell .turn-banner { font-size: 2rem; }
-      .btn { padding: 6px 14px; font-size: 0.75rem; }
-      .cell { font-size: 0.45rem; }
-      .cell .cell-city { font-size: 0.42rem; }
-      .cell .cell-price-section { font-size: 0.4rem; }
-      .cell .players-here .ptoken { width: 14px; height: 14px; }
-      .deck-pile .card-back { font-size: 1.4rem; }
-      #build-mgmt { max-height: 60px; font-size: 0.5rem; position: relative; width: 100%; }
-      .modal-box { max-width: 280px; padding: 8px; }
-      .modal-box h2 { font-size: 0.9rem; }
-      .modal-box p { font-size: 0.75rem; }
-      .modal-box .btn { padding: 5px 12px; font-size: 0.7rem; }
-      #toast-container { max-height: 28px; }
-      .toast { font-size: 0.45rem; padding: 1px 3px; }
+      .player-corner .pc-status { font-size: 0.5rem; }
+      .player-corner .mini-inv-badge { font-size: 0.5rem; padding: 2px 4px; }
+      .center-cell { padding: 8px 6px 4px; }
+      .center-cell .center-pfp { width: 85px; height: 85px; }
+      .center-cell .center-dice .die { width: 85px; height: 85px; font-size: 2.8rem; }
+      .center-cell .cc-actions .btn { padding: 12px 30px; font-size: 1.3rem; }
+      .center-cell .cc-timer { font-size: 1.2rem; padding: 4px 12px; }
+      .center-cell .cc-timer .timer-fill { width: 80px; height: 10px; }
+      .center-cell .turn-banner { font-size: 1.4rem; }
+      .btn { padding: 10px 20px; font-size: 0.9rem; }
+      .cell { font-size: 0.5rem; }
+      .cell .cell-city { font-size: 0.45rem; }
+      .cell .cell-price-section { font-size: 0.42rem; }
+      .cell .players-here .ptoken { width: 16px; height: 16px; }
+      .deck-pile .card-back { font-size: 1.6rem; }
+      #build-mgmt { max-height: 80px; font-size: 0.6rem; position: relative; width: 100%; }
+      .modal-box { max-width: 320px; padding: 12px; }
+      .modal-box h2 { font-size: 1rem; }
+      .modal-box p { font-size: 0.85rem; }
+      .modal-box .btn { padding: 7px 16px; font-size: 0.8rem; }
+      #toast-container { max-height: 34px; }
+      .toast { font-size: 0.5rem; padding: 2px 5px; }
       .trade-panels { flex-direction: column; }
-      .trade-panel { min-height: 100px; }
-      #btn-players-float { top: 4px; right: 4px; padding: 4px 8px; font-size: 0.65rem; }
+      .trade-panel { min-height: 120px; }
+      #btn-players-float { top: 4px; right: 4px; padding: 5px 10px; font-size: 0.75rem; }
       .moving-car { display: none !important; }
     }
 
