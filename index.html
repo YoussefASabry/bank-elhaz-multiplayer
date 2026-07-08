@@ -865,6 +865,7 @@
 <div id="game-container">
   <div class="game-layout">
 
+    <div id="room-code-badge" style="position:fixed;top:12px;left:12px;z-index:50;padding:4px 10px;border-radius:6px;border:1px solid #c4a96a;background:rgba(245,230,200,0.85);color:#5a3a0a;font-size:0.75rem;font-weight:bold;letter-spacing:1px;display:none;"></div>
     <button id="btn-players-float" onclick="openPlayerList()" style="position:fixed;top:12px;right:12px;z-index:50;padding:6px 14px;border-radius:8px;border:none;background:rgba(90,58,26,0.8);color:#ffd700;font-size:0.85rem;cursor:pointer;">👥 Players</button>    <div id="board"></div>
 
     <div id="remote-control" style="display:none;">
@@ -1141,9 +1142,22 @@
     if (document.querySelector('.socket-disconnected-overlay')) return;
     const overlay = document.createElement('div');
     overlay.className = 'socket-disconnected-overlay';
-    overlay.innerHTML = '<div style="background:#c0392b;color:#fff;padding:8px 16px;text-align:center;font-size:0.9rem;font-weight:bold;">🔴 Disconnected from server — check that <code>node multiplayer/server.js</code> is running</div>';
+    overlay.innerHTML = `<div style="background:#c0392b;color:#fff;padding:8px 16px;text-align:center;font-size:0.9rem;font-weight:bold;">🔴 Disconnected from server — rejoin below</div>
+<div style="background:#f5e6c8;padding:12px 16px;text-align:center;border-bottom:2px solid #c4a96a;">
+  <input type="text" id="rejoin-code" placeholder="Room Code" value="${roomCode || ''}" maxlength="4" style="width:80px;padding:6px 8px;border-radius:6px;border:1px solid #c4a96a;text-transform:uppercase;letter-spacing:3px;font-weight:bold;text-align:center;font-size:0.9rem;margin-right:6px;">
+  <input type="text" id="rejoin-name" placeholder="Your Name" value="${myPlayerName || ''}" maxlength="20" style="width:120px;padding:6px 8px;border-radius:6px;border:1px solid #c4a96a;font-size:0.9rem;margin-right:6px;">
+  <button onclick="emitRejoin()" style="padding:6px 16px;border-radius:6px;border:none;background:#2e7d32;color:#fff;font-size:0.85rem;cursor:pointer;font-weight:bold;">🔗 Rejoin</button>
+</div>`;
     overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;';
     document.body.prepend(overlay);
+  }
+
+  window.emitRejoin = function() {
+    const code = document.getElementById('rejoin-code')?.value.trim().toUpperCase();
+    const name = document.getElementById('rejoin-name')?.value.trim();
+    if (!code || !name) { showToast('❌ Enter room code and name'); return; }
+    socket.emit('rejoin_game', { roomCode: code, playerName: name });
+    showToast('🔄 Attempting to rejoin as ' + name + '...');
   }
 
   let myPlayerId = null;
@@ -1168,6 +1182,16 @@
   for (let i = 1; i <= 34; i++) GRID_CLASS[i] = `p${i}`;
 
   // ── Save/restore game state ──
+  function updateRoomCodeBadge() {
+    const badge = document.getElementById('room-code-badge');
+    if (!badge) return;
+    if (roomCode && document.getElementById('game-container')?.style.display === 'block') {
+      badge.textContent = '🏠 ' + roomCode;
+      badge.style.display = 'inline-block';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
   function persistGameState() {
     if (!roomCode || !gameState || !myPlayerName) return;
     try {
@@ -1411,6 +1435,7 @@
     document.querySelectorAll('.lobby-tabs, #panel-host, #panel-join').forEach(e => e.style.display = '');
     document.getElementById('btn-host').disabled = false;
     document.getElementById('btn-join').disabled = false;
+    updateRoomCodeBadge();
   }
 
   // ── Socket event handlers ──
@@ -1439,12 +1464,13 @@
     }
   });
 
-  socket.on('game_started', (data) => {
+   socket.on('game_started', (data) => {
     try {
       gameState = data.gameState;
       persistGameState();
       document.getElementById('lobby-screen').style.display = 'none';
       document.getElementById('game-container').style.display = 'block';
+      updateRoomCodeBadge();
       renderBoard();
       console.log('game_started OK, calling updateUI, phase:', gameState.phase, 'players:', gameState.players?.length, 'currentPlayerIndex:', gameState.currentPlayerIndex);
       updateUI();
@@ -1459,24 +1485,28 @@
   socket.on('rejoined', (data) => {
     myPlayerId = data.playerId;
     roomCode = data.roomCode;
+    document.querySelectorAll('.socket-disconnected-overlay').forEach(el => el.remove());
     if (data.gameState) {
       gameState = data.gameState;
       persistGameState();
       document.getElementById('lobby-screen').style.display = 'none';
       document.getElementById('game-container').style.display = 'block';
+      updateRoomCodeBadge();
       renderBoard();
       updateUI();
       showToast('✅ Rejoined the game');
     } else if (data.players) {
       showRoomWaiting(data.players);
       showToast('✅ Reconnected to lobby');
+      updateRoomCodeBadge();
     }
   });
 
   socket.on('rejoin_failed', () => {
     localStorage.removeItem('bankelhaz_session');
     checkSavedGame();
-    showToast('Could not rejoin — use "Resume Game" to restore from saved state');
+    showToast('❌ Could not rejoin — check room code and name, or use "Resume Game"');
+    showSocketDisconnected();
   });
 
   socket.on('restore_game_result', (data) => {
@@ -1488,6 +1518,7 @@
         persistGameState();
         document.getElementById('lobby-screen').style.display = 'none';
         document.getElementById('game-container').style.display = 'block';
+        updateRoomCodeBadge();
         renderBoard();
         updateUI();
         showToast('✅ Game restored');
