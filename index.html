@@ -434,7 +434,7 @@
     #preview-modal.show { display: flex; }
     #preview-modal .preview-box { background: #f5e6c8; border: 3px solid #8B6914; border-radius: 16px; padding: 16px; max-width: 95vw; max-height: 95vh; overflow: auto; position: relative; }
     #preview-modal .preview-box .preview-close { position: absolute; top: 4px; right: 10px; font-size: 1.4rem; cursor: pointer; color: #7a5a3a; background: none; border: none; z-index: 5; }
-    #preview-modal .preview-board { transform: scale(0.65); transform-origin: top left; }
+    #preview-modal .preview-board { transform-origin: top left; }
 
     @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-50px) scale(1.2); } }
     @keyframes floatDown { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(50px) scale(1.2); } }
@@ -817,8 +817,8 @@
     </div>
     <div style="display:flex;gap:8px;align-items:center;margin-top:10px;border-top:1px solid #c4a96a;padding-top:10px;">
       <label style="font-size:0.75rem;color:#7a5a3a;flex:1;">🎨 My Theme</label>
-      <select id="theme-host" onmouseenter="previewHover()" onmouseleave="previewHoverEnd()" onchange="openPreview()" style="width:120px;padding:4px 8px;border-radius:6px;border:1px solid #c4a96a;background:#fff;color:#3a2a1a;font-size:0.85rem;"></select>
-      <button onmouseenter="previewHover()" onmouseleave="previewHoverEnd()" onclick="openPreview()" style="padding:4px 10px;border-radius:6px;border:1px solid #c4a96a;background:#faf0dc;color:#3a2a1a;font-size:0.8rem;cursor:pointer;">👁️</button>
+      <select id="theme-host" onchange="openPreview()" style="width:120px;padding:4px 8px;border-radius:6px;border:1px solid #c4a96a;background:#fff;color:#3a2a1a;font-size:0.85rem;"></select>
+      <button onclick="openPreview()" style="padding:4px 10px;border-radius:6px;border:1px solid #c4a96a;background:#faf0dc;color:#3a2a1a;font-size:0.8rem;cursor:pointer;">👁️</button>
     </div>
     <button class="lobby-btn" id="btn-host" onclick="hostGame()">🎮 Create Room</button>
     <div class="lobby-error" id="lobby-error-host"></div>
@@ -834,8 +834,8 @@
     <div class="pfp-grid" id="pfp-grid-join"></div>
     <div style="display:flex;gap:8px;align-items:center;margin-top:10px;border-top:1px solid #c4a96a;padding-top:10px;">
       <label style="font-size:0.75rem;color:#7a5a3a;flex:1;">🎨 My Theme</label>
-      <select id="theme-join" onmouseenter="previewHover()" onmouseleave="previewHoverEnd()" onchange="openPreview()" style="width:120px;padding:4px 8px;border-radius:6px;border:1px solid #c4a96a;background:#fff;color:#3a2a1a;font-size:0.85rem;"></select>
-      <button onmouseenter="previewHover()" onmouseleave="previewHoverEnd()" onclick="openPreview()" style="padding:4px 8px;border-radius:6px;border:1px solid #c4a96a;background:#faf0dc;color:#3a2a1a;font-size:0.8rem;cursor:pointer;">👁️</button>
+      <select id="theme-join" onchange="openPreview()" style="width:120px;padding:4px 8px;border-radius:6px;border:1px solid #c4a96a;background:#fff;color:#3a2a1a;font-size:0.85rem;"></select>
+      <button onclick="openPreview()" style="padding:4px 8px;border-radius:6px;border:1px solid #c4a96a;background:#faf0dc;color:#3a2a1a;font-size:0.8rem;cursor:pointer;">👁️</button>
     </div>
     <button class="lobby-btn" id="btn-join" onclick="joinGame()">🔗 Join Room</button>
     <div class="lobby-error" id="lobby-error-join"></div>
@@ -3689,7 +3689,7 @@
   }
 
   // ── Preview modal ──
-  let previewTimer = null;
+  const PREVIEW_BOARD_W = 1064, PREVIEW_BOARD_H = 735;
   window.openPreview = function() {
     const theme = document.querySelector('#theme-host, #theme-join')?.value || 'plain';
     const modal = document.getElementById('preview-modal');
@@ -3701,15 +3701,20 @@
     board.className = 'preview-board';
     renderPreviewBoard(board, theme);
     container.appendChild(board);
-  };
-
-  window.previewHover = function() {
-    if (previewTimer) clearTimeout(previewTimer);
-    previewTimer = setTimeout(window.openPreview, 300);
-  };
-
-  window.previewHoverEnd = function() {
-    if (previewTimer) { clearTimeout(previewTimer); previewTimer = null; }
+    // Scale board to fit container after layout
+    requestAnimationFrame(() => {
+      const box = container.closest('.preview-box');
+      if (!box) return;
+      const boxStyle = getComputedStyle(box);
+      const padX = parseFloat(boxStyle.paddingLeft) + parseFloat(boxStyle.paddingRight);
+      const padY = parseFloat(boxStyle.paddingTop) + parseFloat(boxStyle.paddingBottom);
+      const availW = box.clientWidth - padX;
+      const availH = box.clientHeight - padY;
+      if (availW <= 0 || availH <= 0) return;
+      let s = Math.min(availW / PREVIEW_BOARD_W, availH / PREVIEW_BOARD_H, 1);
+      s = Math.max(s, 0.2);
+      board.style.transform = `scale(${s})`;
+    });
   };
 
   function closePreview() {
