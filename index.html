@@ -221,8 +221,11 @@
     .cell.dual_deck_trigger .deck-label { font-size: 1.6rem; color: #5a3a0a; font-weight: bold; }
     .cell.dual_deck_trigger .deck-icon { font-size: 2.4rem; }
     .p13, .p30 { height: 120px; align-self: center; background: #dccb9a; border: 3px solid #8B6914; border-radius: 10px; }
+    .p11, .p21 { height: 120px; align-self: center; background: #d4c4a0; border: 3px solid #8B6914; border-radius: 10px; }
     .p13 .deck-label, .p30 .deck-label { font-size: 2.4rem; }
-    .p13 .cell-section:last-child, .p30 .cell-section:last-child { font-size: 1rem; font-weight: bold; color: #5a3a0a; }
+    .p11 .deck-label, .p21 .deck-label { font-size: 2.4rem; }
+    .p13 .cell-section:last-child, .p30 .cell-section:last-child,
+    .p11 .cell-section:last-child, .p21 .cell-section:last-child { font-size: 1rem; font-weight: bold; color: #5a3a0a; }
     .cell.corner_square { background: #e8d5a3; border: 3px solid #8B6914; }
     .cell.corner_square .corner-icon, .cell.corner .corner-icon { font-size: 1.8rem; margin-bottom: 2px; position: relative; }
     .cell.corner_square .corner-icon img, .cell.corner .corner-icon img { display: block; margin: 0 auto; object-fit: contain; width: 32px; height: 32px; }
@@ -531,7 +534,7 @@
       .cell .cell-city { font-size: 0.45rem; }
       .cell .cell-price-section { font-size: 0.4rem; }
       .cell .players-here .ptoken { width: 14px; height: 14px; }
-      .deck-pile .card-back { font-size: 1.5rem; }
+      .deck-pile .card-back { font-size: 2rem; }
       #build-mgmt { max-height: 80px; font-size: 0.6rem; }
       .modal-box { max-width: 320px; padding: 12px; }
       #toast-container { max-height: 36px; }
@@ -551,7 +554,7 @@
       .cell { font-size: 0.4rem; }
       .cell .cell-city { font-size: 0.35rem; }
       .cell .cell-price-section { font-size: 0.35rem; }
-      .deck-pile .card-back { font-size: 1.2rem; }
+      .deck-pile .card-back { font-size: 1.7rem; }
     }
 
     /* Extra small portrait for tiny phones */
@@ -687,8 +690,8 @@
     .deck-pile { position: absolute; cursor: pointer; transition: transform 0.15s, box-shadow 0.3s; border-radius: 6px; padding: 4px; }
     .deck-pile:hover { z-index: 20; }
     .deck-pile.clickable:hover { transform: scale(1.12) translateY(-4px); }
-    .deck-pile .card-back { width: 135px; height: 96px; font-size: 3rem; display: flex; align-items: center; justify-content: center; border-radius: 8px; box-shadow: 0 3px 10px rgba(0,0,0,0.3); }
-    .deck-pile .deck-label { font-size: 1.05rem; text-align: center; color: #5a3a0a; margin-top: 3px; font-weight: bold; }
+    .deck-pile .card-back { width: 135px; height: 96px; font-size: 4rem; display: flex; align-items: center; justify-content: center; border-radius: 8px; box-shadow: 0 3px 10px rgba(0,0,0,0.3); }
+    .deck-pile .deck-label { font-size: 1.2rem; text-align: center; color: #5a3a0a; margin-top: 3px; font-weight: bold; }
     .deck-pile.mahkama-pile { top: 25%; right: 14%; }
     .deck-pile.hazak-pile { bottom: 25%; left: 14%; }
 
@@ -2235,7 +2238,7 @@
           </div>
         `;
       } else if (sq.type === 'deck_trigger' || sq.type === 'dual_deck_trigger') {
-        cell.innerHTML = `<div class="cell-section deck-label">${getDeckIcon(sq)}</div><div class="cell-section" style="font-size:0.75rem;color:#5a3a0a;font-weight:bold;">${sq.name}</div>`;
+        cell.innerHTML = `<div class="cell-section deck-label">${getDeckIcon(sq)}</div><div class="cell-section" style="font-size:0.9rem;color:#5a3a0a;font-weight:bold;">${sq.name}</div>`;
       }
 
       const tokensDiv = document.createElement('div');
