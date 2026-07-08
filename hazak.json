@@ -21,8 +21,8 @@
       "bank_money": 0,
       "move_to": 0,
       "players_money": 0,
-      "free_card": 1,
-      "no_prison_card": 0,
+      "free_card": 0,
+      "no_prison_card": 1,
       "choices": [
         {
         }

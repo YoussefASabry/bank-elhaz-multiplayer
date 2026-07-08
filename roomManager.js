@@ -366,34 +366,6 @@ export class RoomManager {
 
     gs.blindCard = null;
 
-    if (gs.pendingSecondCard) {
-      const second = gs.pendingSecondCard;
-      gs.pendingSecondCard = false;
-      const card2 = room.engine.drawCard(second.deckType);
-      if (card2) {
-        let extra = {};
-        if (card2.action === 'collect_from_city_owners') {
-          extra = room.engine.preSelectCitiesForCard(card2);
-        }
-        gs.blindCard = { card: card2, playerId, squareName: second.squareName, deckType: second.deckType, cardNumber: 2, ...extra };
-        io.to(code).emit('state_update', { gameState: gs, phase: gs.phase });
-        this.io.to(playerId).emit('private_card', {
-          card: card2, cardNumber: 2, squareName: second.squareName, deckType: second.deckType, pendingSecondCard: false,
-          cityNames: extra.cityNames || [],
-        });
-        socketToRoom(io, code, playerId).emit('other_drawing', { playerName: player.name });
-        // Also broadcast the second card to others with 2 sec delay
-        setTimeout(() => {
-          io.to(code).except(playerId).emit('public_card_draw', {
-            card: card2, cardNumber: 2, squareName: second.squareName, deckType: second.deckType,
-            pendingSecondCard: false, playerName: player.name,
-            cityNames: extra.cityNames || [],
-          });
-        }, 2000);
-        return null;
-      }
-    }
-
     room.engine.handleCardEffect(card, playerId);
     const outcome = { description: card.description, playerName: player.name, deckType: deckType || 'hazak' };
 

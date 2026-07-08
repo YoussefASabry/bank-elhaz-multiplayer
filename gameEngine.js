@@ -293,18 +293,17 @@ export class GameEngine {
     if (pending.deckType !== deckType && pending.deckType !== 'dual') return null;
 
     if (pending.deckType === 'dual') {
-      // First draw: Mahkama
-      const card1 = this.drawCard('mahkama');
-      if (card1) {
+      const card = this.drawCard(deckType);
+      if (card) {
         let extra = {};
-        if (card1.action === 'collect_from_city_owners') {
-          extra = this.preSelectCitiesForCard(card1);
+        if (card.action === 'collect_from_city_owners') {
+          extra = this.preSelectCitiesForCard(card);
         }
-        gs.blindCard = { card: card1, playerId, squareName: pending.squareName, deckType: 'mahkama', cardNumber: 1, ...extra };
-        gs.pendingSecondCard = { deckType: 'hazak', squareName: pending.squareName };
-        gs.pendingDeckDraw = null;
+        gs.blindCard = { card, playerId, squareName: pending.squareName, deckType, ...extra };
+        const otherDeck = deckType === 'mahkama' ? 'hazak' : 'mahkama';
+        gs.pendingDeckDraw = { playerId, deckType: otherDeck, squareName: pending.squareName };
         gs.phase = 'blind_card';
-        return { card: card1, cardNumber: 1, deckType: 'mahkama', pendingSecondCard: true, ...extra };
+        return { card, cardNumber: 1, deckType, pendingSecondCard: false, ...extra };
       } else {
         gs.pendingDeckDraw = null;
         this.finishTurn();
@@ -927,22 +926,17 @@ export class GameEngine {
   finishTurn(skipAdvance) {
     const gs = this.state;
     if (gs.pendingDeckDraw) {
-      gs.phase = 'draw_card';
-      return;
+      const drawer = gs.players.find(p => p.id === gs.pendingDeckDraw.playerId);
+      if (drawer && drawer.statusEffects.missedTurnsRemaining > 0) {
+        gs.pendingDeckDraw = null;
+      } else {
+        gs.phase = 'draw_card';
+        return;
+      }
     }
     if (gs.pendingClubChoice) {
       gs.phase = 'club_choice';
       return;
-    }
-    if (gs.pendingSecondCard) {
-      const second = gs.pendingSecondCard;
-      gs.pendingSecondCard = false;
-      const card2 = this.drawCard(second.deckType);
-      if (card2) {
-        gs.blindCard = { card: card2, playerId: gs.players[gs.currentPlayerIndex]?.id, squareName: second.squareName, deckType: second.deckType, cardNumber: 2 };
-        gs.phase = 'blind_card';
-        return;
-      }
     }
     if (gs.pendingRentPayment) {
       gs.phase = 'rent_payment';

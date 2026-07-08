@@ -244,13 +244,11 @@ io.on('connection', (socket) => {
     // Send private card to the drawing player immediately
     io.to(socket.id).emit('private_card', cardInfo);
     io.to(roomCode).except(socket.id).emit('other_drawing', { playerName: player.name });
-    // Broadcast card to all other players 2 seconds later, stays visible until confirm
-    setTimeout(() => {
-      io.to(roomCode).except(socket.id).emit('public_card_draw', {
-        ...cardInfo,
-        playerName: player.name,
-      });
-    }, 2000);
+    // Broadcast card to all other players immediately
+    io.to(roomCode).except(socket.id).emit('public_card_draw', {
+      ...cardInfo,
+      playerName: player.name,
+    });
     actionLog(roomCode, `🃏 ${player.name} is reading a card...`);
     broadcastState(roomCode);
   });
@@ -367,6 +365,14 @@ io.on('connection', (socket) => {
     if (!initiator || !partner || initiator.isBankrupt || partner.isBankrupt) {
       socket.emit('trade_error', { message: 'Trade could not be started' });
       return;
+    }
+    // Check trade timing restriction
+    if (room.options?.tradeTiming === 'own_turn') {
+      const currentPlayer = gs.players[gs.currentPlayerIndex];
+      if (!currentPlayer || currentPlayer.id !== socket.id) {
+        socket.emit('trade_error', { message: '⏳ You can only trade on your own turn' });
+        return;
+      }
     }
     // Send trade request notification to the partner
     io.to(targetId).emit('trade_request_notify', {
@@ -601,6 +607,16 @@ io.on('connection', (socket) => {
     if (room.gameState) {
       const gp = room.gameState.players.find(p => p.id === oldId);
       if (gp) { gp.id = socket.id; gp.connected = true; }
+      // Update all board square owners and pending references from old ID to new ID
+      room.gameState.boardSquares.forEach(sq => {
+        if (sq.owner === oldId) sq.owner = socket.id;
+      });
+      if (room.gameState.pendingPropertyBuy?.playerId === oldId) room.gameState.pendingPropertyBuy.playerId = socket.id;
+      if (room.gameState.pendingRentPayment?.playerId === oldId) room.gameState.pendingRentPayment.playerId = socket.id;
+      if (room.gameState.pendingRentPayment?.ownerId === oldId) room.gameState.pendingRentPayment.ownerId = socket.id;
+      if (room.gameState.pendingDeckDraw?.playerId === oldId) room.gameState.pendingDeckDraw.playerId = socket.id;
+      if (room.gameState.blindCard?.playerId === oldId) room.gameState.blindCard.playerId = socket.id;
+      if (room.gameState.activeCardChoice?._playerId === oldId) room.gameState.activeCardChoice._playerId = socket.id;
     }
     socket.join(roomCode);
     io.to(roomCode).emit('player_reconnected', { playerId: socket.id, oldPlayerId: oldId, players: room.players });

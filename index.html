@@ -21,22 +21,7 @@
       --card-bg: linear-gradient(135deg, rgba(90,58,26,0.45), rgba(122,90,42,0.45));
       --card-color: #ffd700;
     }
-    body.dark-mode {
-      --bg: #1a1a2e;
-      --bg2: #16213e;
-      --text: #e0e0e0;
-      --text2: #c0a060;
-      --text3: #a08050;
-      --border: #4a4a6a;
-      --border2: #6a5a2a;
-      --board-bg: #2a2a4a;
-      --panel-bg: #1e1e3a;
-      --modal-bg: #222;
-      --btn-primary: linear-gradient(135deg, #5a4a2a, #3a2a1a);
-      --card-bg: linear-gradient(135deg, rgba(26,26,46,0.7), rgba(22,34,62,0.7));
-      --card-color: #c0a060;
-    }
-    html { transition: background 0.3s, color 0.3s; touch-action: manipulation; }
+    html { touch-action: manipulation; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Segoe UI', Tahoma, sans-serif;
@@ -137,13 +122,13 @@
       position: absolute; pointer-events: all;
       background: rgba(245,230,200,0.95);
       border: 2px solid #c4a96a;
-      border-radius: 14px;
-      padding: 14px 18px;
-      min-width: 220px;
-      max-width: 280px;
-      box-shadow: 0 3px 16px rgba(0,0,0,0.12);
-      font-size: 1rem;
-      display: flex; flex-direction: column; gap: 8px;
+      border-radius: 10px;
+      padding: 8px 12px;
+      min-width: 160px;
+      max-width: 200px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      font-size: 0.85rem;
+      display: flex; flex-direction: column; gap: 4px;
       transition: border-color 0.3s, box-shadow 0.3s;
     }
     .player-corner.current-turn {
@@ -152,15 +137,20 @@
     }
     .player-corner.bankrupt { opacity: 0.35; }
     .player-corner.disconnected { opacity: 0.6; border: 2px dashed #e53935; }
-    .player-corner .pc-header { display: flex; align-items: center; gap: 10px; font-weight: bold; color: #3a2a1a; font-size: 1.1rem; }
-    .player-corner .pc-header img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid #c4a96a; }
-    .player-corner .pc-money { font-family: monospace; font-weight: bold; color: #2e7d32; font-size: 1.15rem; transition: color 0.3s, background 0.3s; padding: 4px 8px; border-radius: 4px; }
+    .player-corner .pc-header { display: flex; align-items: center; gap: 6px; font-weight: bold; color: #3a2a1a; font-size: 0.85rem; }
+    .player-corner .pc-header img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 2px solid #c4a96a; }
+    .player-corner .pc-money { font-family: monospace; font-weight: bold; color: #2e7d32; font-size: 0.9rem; transition: color 0.3s, background 0.3s; padding: 2px 6px; border-radius: 4px; }
     .player-corner .pc-money.flash-gain { color: #fff; background: rgba(76,175,80,0.6); }
     .player-corner .pc-money.flash-loss { color: #fff; background: rgba(244,67,54,0.6); }
-    .player-corner .pc-props { font-size: 0.85rem; color: #7a5a3a; max-height: 90px; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 4px; }
-    .player-corner .pc-props .mini-card { display: inline-block; padding: 3px 8px; border-radius: 5px; font-size: 0.8rem; color: #fff; font-weight: bold; cursor: pointer; }
-    .player-corner .pc-status { font-size: 0.85rem; color: #c0392b; font-weight: bold; }
-    .player-corner .mini-inv-badge { font-size:0.65rem; padding:2px 6px; border-radius:4px; font-weight:bold; }
+    .player-corner .pc-props { display: none; }
+    .player-corner .pc-status { font-size: 0.7rem; color: #c0392b; font-weight: bold; }
+    .player-corner .mini-inv-badge { font-size:0.6rem; padding:1px 4px; border-radius:4px; font-weight:bold; }
+
+    /* Player action popup */
+    #player-action-content .popup-header { display: flex; align-items: center; gap: 10px; justify-content: center; margin-bottom: 12px; font-size: 1.1rem; }
+    #player-action-content .popup-header img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #c4a96a; }
+    #player-action-content .popup-actions { display: flex; flex-direction: column; gap: 8px; }
+    #player-action-content .popup-actions .btn { font-size: 0.9rem; padding: 10px 20px; }
     .player-corner.corner-tl { top: 100px; left: 16px; }
     .player-corner.corner-tr { top: 100px; right: 16px; }
     .player-corner.corner-bl { bottom: 16px; left: 16px; }
@@ -219,17 +209,17 @@
     .cell .cell-bottom-section .building-icons { font-size: 0.8rem; }
     .cell .corner-name { font-weight: bold; font-size: 0.9rem; color: #3a2a1a; text-align: center; }
     .cell.property { background: var(--prop-bg, #f5e6c8); border-color: #c4a96a; }
-    .cell.property .cell-color-section { height: 14px; flex: 0 0 14px; width: 100%; border-radius: 4px 4px 0 0; font-size: 0.6rem; }
+    .cell.property .cell-color-section { height: 22px; flex: 0 0 22px; width: 100%; border-radius: 4px 4px 0 0; font-size: 0.6rem; }
     .cell.property .cell-city { font-weight: bold; font-size: 1rem; color: #3a2a1a; line-height: 1.3; padding: 10px 6px 8px; letter-spacing: 0.7px; }
     .cell.property .cell-price-section { font-size: 0.85rem; color: #8B6914; font-weight: bold; padding: 2px 4px; background: rgba(139,105,20,0.08); border-radius: 3px; margin: 0 4px; }
     .cell.property.owned { border-color: #c49a3c; box-shadow: inset 0 0 8px rgba(196,154,60,0.25); }
 
     .cell.deck_trigger { background: #e8d5a3; border-color: #a08040; }
-    .cell.deck_trigger .deck-label { font-size: 0.85rem; color: #6a4a1a; font-weight: bold; }
-    .cell.deck_trigger .deck-icon { font-size: 1.6rem; }
+    .cell.deck_trigger .deck-label { font-size: 1.6rem; color: #5a3a0a; font-weight: bold; }
+    .cell.deck_trigger .deck-icon { font-size: 2.4rem; }
     .cell.dual_deck_trigger { background: #e8d5a3; border: 2px solid #a08040; }
-    .cell.dual_deck_trigger .deck-label { font-size: 0.85rem; color: #6a4a1a; font-weight: bold; }
-    .cell.dual_deck_trigger .deck-icon { font-size: 1.6rem; }
+    .cell.dual_deck_trigger .deck-label { font-size: 1.6rem; color: #5a3a0a; font-weight: bold; }
+    .cell.dual_deck_trigger .deck-icon { font-size: 2.4rem; }
     .p13, .p30 { height: 120px; align-self: center; background: #dccb9a; border: 3px solid #8B6914; border-radius: 10px; }
     .p13 .deck-label, .p30 .deck-label { font-size: 2.4rem; }
     .p13 .cell-section:last-child, .p30 .cell-section:last-child { font-size: 1rem; font-weight: bold; color: #5a3a0a; }
@@ -264,7 +254,7 @@
     .cell-color.purple { background: #9b59b6; }
     .cell-color.pink { background: #ff80ab; }
     .cell-color.orange { background: #ff9800; }
-    .cell-color.yellow { background: #f9a825; }
+    .cell-color.yellow { background: #FFEB3B; }
     .cell-color.brown { background: #795548; }
     .cell-color.green { background: #4caf50; }
     .cell-color.cyan { background: #00bcd4; }
@@ -325,6 +315,15 @@
     .btn-warn { background: linear-gradient(135deg, #c0392b, #922b21); color: #fff; font-size: 0.8rem; padding: 5px 10px; }
 
     #build-mgmt { max-height: 140px; overflow-y: auto; font-size: 0.8rem; }
+
+    /* Remote control for mobile */
+    #remote-control { width: 100%; max-width: 500px; margin: 8px auto; padding: 10px 12px; }
+    #remote-control .rc-row { display: flex; gap: 8px; justify-content: center; margin-bottom: 6px; }
+    #remote-control .rc-row .btn { flex: 1; padding: 14px 8px; font-size: 1.1rem; border-radius: 12px; }
+    #remote-control .rc-row.rc-secondary .btn { font-size: 0.9rem; padding: 12px 6px; }
+    #remote-control .rc-prison { display: flex; gap: 6px; align-items: center; justify-content: center; flex-wrap: wrap; }
+    #remote-control .rc-prison span { font-size: 0.8rem; color: #ff9800; font-weight: bold; }
+    #remote-control .rc-prison .btn { padding: 10px 16px; font-size: 0.85rem; flex: 1; min-width: 0; }
     #build-mgmt .build-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px solid #c4a96a; }
     #build-mgmt .build-row .build-name { flex: 1; }
     #build-mgmt .build-row .build-levels { color: #7a5a3a; font-size: 0.7rem; }
@@ -497,90 +496,91 @@
     }
     @media (max-width: 800px) {
       #board { transform: scale(0.5); transform-origin: center center; }
-      .player-corner { padding: 8px 10px; min-width: 140px; font-size: 0.75rem; }
+      .player-corner { padding: 6px 10px; min-width: 120px; font-size: 0.7rem; gap: 3px; }
+      .player-corner .pc-header { font-size: 0.75rem; gap: 4px; }
+      .player-corner .pc-header img { width: 22px; height: 22px; }
+      .player-corner .pc-money { font-size: 0.75rem; padding: 2px 5px; }
+      .player-corner .pc-status { font-size: 0.6rem; }
+      .player-corner .mini-inv-badge { font-size: 0.55rem; padding: 1px 4px; }
       .player-corner.corner-lt, .player-corner.corner-lc, .player-corner.corner-lb { transform: translateY(-50%) scale(0.9); }
       .player-corner.corner-rt, .player-corner.corner-rc, .player-corner.corner-rb { transform: translateY(-50%) scale(0.9); }
     }
 
-    /* Mobile landscape: big map, compact edge player cards */
-    @media (orientation: landscape) and (max-height: 600px) {
-      #board { transform: scale(0.5); transform-origin: center center; }
-      .player-corner { padding: 6px 12px; min-width: 130px; max-width: 170px; font-size: 0.7rem; gap: 4px; border-radius: 10px; }
-      .player-corner .pc-header { font-size: 0.85rem; gap: 5px; }
-      .player-corner .pc-header img { width: 26px; height: 26px; }
-      .player-corner .pc-money { font-size: 0.9rem; padding: 3px 6px; }
-      .player-corner .pc-props { font-size: 0.65rem; max-height: 50px; gap: 3px; }
-      .player-corner .pc-props .mini-card { padding: 2px 6px; font-size: 0.65rem; }
-      .player-corner .pc-status { font-size: 0.7rem; }
-      .player-corner .mini-inv-badge { font-size: 0.65rem; padding: 2px 5px; }
-      .center-cell { padding: 10px 6px 4px; }
-      .center-cell .cc-actions .btn { padding: 14px 36px; font-size: 1.5rem; }
-      .center-cell .center-pfp { width: 80px; height: 80px; }
-      .center-cell .center-dice .die { width: 80px; height: 80px; font-size: 2.6rem; }
-      .center-cell .cc-timer { font-size: 1.4rem; padding: 5px 14px; }
-      .center-cell .cc-timer .timer-fill { width: 80px; height: 12px; }
-      .center-cell .turn-banner { font-size: 1.6rem; }
-      .btn { padding: 10px 22px; font-size: 0.95rem; }
-      .cell { font-size: 0.55rem; }
-      .cell .cell-city { font-size: 0.5rem; }
-      .cell .cell-price-section { font-size: 0.45rem; }
-      .cell .players-here .ptoken { width: 16px; height: 16px; }
-      .deck-pile .card-back { font-size: 1.6rem; }
-      #build-mgmt { max-height: 100px; font-size: 0.7rem; }
-      .modal-box { max-width: 340px; padding: 14px; }
-      #toast-container { max-height: 40px; }
-      .toast { font-size: 0.55rem; padding: 2px 6px; }
+    /* Mobile/tablet landscape: side panel layout */
+    @media (orientation: landscape) and (max-width: 1100px) {
+      #game-container { overflow: hidden; }
+      .game-layout { display: flex; flex-direction: row; align-items: stretch; justify-content: center; gap: 6px; }
+      #board { flex: 0 0 auto; transform-origin: left center; }
+      #remote-control { display: none !important; }
+      #player-corners { position: relative; top: auto; left: auto; width: auto; height: auto; display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 4px; pointer-events: auto; overflow-y: auto; }
+      .player-corner { position: relative; top: auto !important; left: auto !important; right: auto !important; bottom: auto !important; transform: none !important; min-width: 100px; max-width: 160px; padding: 5px 8px; font-size: 0.6rem; gap: 2px; border-radius: 8px; }
+      .player-corner .pc-header { font-size: 0.65rem; gap: 3px; }
+      .player-corner .pc-header img { width: 20px; height: 20px; }
+      .player-corner .pc-money { font-size: 0.7rem; padding: 1px 4px; }
+      .player-corner .pc-status { font-size: 0.5rem; }
+      .player-corner .mini-inv-badge { font-size: 0.5rem; padding: 1px 3px; }
+      .center-cell { padding: 8px 5px 3px; }
+      .center-cell .center-pfp { width: 60px; height: 60px; }
+      .center-cell .center-dice .die { width: 60px; height: 60px; font-size: 2.2rem; }
+      .center-cell .cc-actions .btn { padding: 10px 24px; font-size: 1.2rem; }
+      .center-cell .cc-timer { font-size: 1rem; padding: 3px 10px; }
+      .center-cell .cc-timer .timer-fill { width: 60px; height: 8px; }
+      .center-cell .turn-banner { font-size: 1.2rem; }
+      .btn { padding: 8px 16px; font-size: 0.85rem; }
+      .cell { font-size: 0.5rem; }
+      .cell .cell-city { font-size: 0.45rem; }
+      .cell .cell-price-section { font-size: 0.4rem; }
+      .cell .players-here .ptoken { width: 14px; height: 14px; }
+      .deck-pile .card-back { font-size: 1.5rem; }
+      #build-mgmt { max-height: 80px; font-size: 0.6rem; }
+      .modal-box { max-width: 320px; padding: 12px; }
+      #toast-container { max-height: 36px; }
+      .toast { font-size: 0.5rem; padding: 2px 5px; }
     }
     @media (orientation: landscape) and (max-height: 450px) {
-      #board { transform: scale(0.4); }
-      .player-corner { min-width: 100px; max-width: 130px; font-size: 0.6rem; padding: 4px 8px; }
-      .player-corner .pc-header { font-size: 0.7rem; }
-      .player-corner .pc-header img { width: 20px; height: 20px; }
-      .player-corner .pc-money { font-size: 0.7rem; }
-      .player-corner .pc-props { max-height: 36px; font-size: 0.55rem; }
-      .player-corner .pc-props .mini-card { padding: 1px 5px; font-size: 0.55rem; }
-      .player-corner .pc-status { font-size: 0.55rem; }
-      .player-corner .mini-inv-badge { font-size: 0.55rem; padding: 1px 4px; }
-      .center-cell { padding: 6px 4px 2px; }
-      .center-cell .cc-actions .btn { padding: 18px 40px; font-size: 1.6rem; }
-      .center-cell .center-dice .die { width: 90px; height: 90px; font-size: 3rem; }
-      .center-cell .center-pfp { width: 90px; height: 90px; }
-      .center-cell .cc-timer { font-size: 1.5rem; padding: 4px 12px; }
-      .center-cell .cc-timer .timer-fill { width: 72px; height: 10px; }
-      .center-cell .turn-banner { font-size: 1.4rem; }
-      .btn { padding: 7px 16px; font-size: 0.8rem; }
-      .cell { font-size: 0.45rem; }
-      .cell .cell-city { font-size: 0.4rem; }
-      .cell .cell-price-section { font-size: 0.4rem; }
-      .cell .players-here .ptoken { width: 12px; height: 12px; }
-      .deck-pile .card-back { font-size: 1.3rem; }
-      #build-mgmt { max-height: 70px; font-size: 0.6rem; }
-      .modal-box { max-width: 300px; padding: 10px; }
-      #toast-container { max-height: 32px; }
-      .toast { font-size: 0.5rem; padding: 1px 4px; }
+      .player-corner { min-width: 80px; max-width: 120px; font-size: 0.5rem; padding: 3px 6px; gap: 2px; }
+      .player-corner .pc-header { font-size: 0.55rem; gap: 2px; }
+      .player-corner .pc-header img { width: 16px; height: 16px; }
+      .player-corner .pc-money { font-size: 0.55rem; padding: 1px 3px; }
+      .center-cell { padding: 4px 3px 2px; }
+      .center-cell .center-pfp { width: 45px; height: 45px; }
+      .center-cell .center-dice .die { width: 45px; height: 45px; font-size: 1.6rem; }
+      .center-cell .cc-actions .btn { padding: 8px 18px; font-size: 0.9rem; }
+      .center-cell .cc-timer { font-size: 0.8rem; padding: 2px 8px; }
+      .center-cell .cc-timer .timer-fill { width: 45px; height: 6px; }
+      .cell { font-size: 0.4rem; }
+      .cell .cell-city { font-size: 0.35rem; }
+      .cell .cell-price-section { font-size: 0.35rem; }
+      .deck-pile .card-back { font-size: 1.2rem; }
     }
 
-    /* Mobile portrait: board fills top half+, compact controls in bottom half */
+    /* Extra small portrait for tiny phones */
+    @media (orientation: portrait) and (max-width: 420px) {
+      #remote-control .rc-row .btn { padding: 12px 6px; font-size: 0.95rem; }
+      #remote-control .rc-row.rc-secondary .btn { font-size: 0.8rem; padding: 10px 4px; }
+    }
+
+    /* Mobile portrait: board at top, remote control below, player cards at bottom */
     @media (orientation: portrait) and (max-width: 600px) {
-      #game-container { overflow-y: auto; }
-      .game-layout { display: block; position: relative; height: 100vh; overflow-y: visible; padding-top: 410px; }
-      #board { position: absolute; top: 0; left: 50%; transform: translateX(-50%) scale(0.56); transform-origin: top center; margin: 0; z-index: 1; }
-      #player-corners { position: relative; width: 100%; height: auto; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; padding: 6px 4px; top: auto; left: auto; pointer-events: auto; }
+      #game-container { overflow-y: auto; height: auto; min-height: 100vh; }
+      .game-layout { display: flex; flex-direction: column; align-items: center; overflow-y: visible; padding-top: 0; height: auto; }
+      #board { position: relative; top: auto; left: auto; transform-origin: top center; margin: 0 auto; z-index: 1; flex-shrink: 0; }
+      #remote-control { display: block !important; flex-shrink: 0; }
+      #player-corners { flex-shrink: 0; position: relative; width: 100%; height: auto; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; padding: 6px 4px; top: auto; left: auto; pointer-events: auto; }
       .player-corner { position: relative; top: auto !important; left: auto !important; right: auto !important; bottom: auto !important; transform: none !important; min-width: 0; max-width: none; width: calc(50% - 6px); padding: 5px 8px; font-size: 0.65rem; gap: 3px; border-radius: 8px; }
       .player-corner .pc-header { font-size: 0.7rem; gap: 3px; }
       .player-corner .pc-header img { width: 22px; height: 22px; }
       .player-corner .pc-money { font-size: 0.7rem; padding: 2px 5px; }
-      .player-corner .pc-props { display: none; }
       .player-corner .pc-status { font-size: 0.5rem; }
       .player-corner .mini-inv-badge { font-size: 0.5rem; padding: 2px 4px; }
       .center-cell { padding: 8px 6px 4px; }
       .center-cell .center-pfp { width: 85px; height: 85px; }
       .center-cell .center-dice .die { width: 85px; height: 85px; font-size: 2.8rem; }
-      .center-cell .cc-actions .btn { padding: 12px 30px; font-size: 1.3rem; }
+      .center-cell .cc-actions { display: none !important; }
+      .center-cell .cc-prison { display: none !important; }
       .center-cell .cc-timer { font-size: 1.2rem; padding: 4px 12px; }
       .center-cell .cc-timer .timer-fill { width: 80px; height: 10px; }
       .center-cell .turn-banner { font-size: 1.4rem; }
-      .btn { padding: 10px 20px; font-size: 0.9rem; }
       .cell { font-size: 0.5rem; }
       .cell .cell-city { font-size: 0.45rem; }
       .cell .cell-price-section { font-size: 0.42rem; }
@@ -694,53 +694,32 @@
 
     /* Glow effect on deck piles when it's the current player's turn to draw */
     .deck-pile.glow-mahkama {
-      animation: glowPulseMahkama 1.2s ease-in-out infinite;
+      animation: glowPulseMahkama 0.8s ease-in-out infinite;
       filter: drop-shadow(0 0 12px rgba(42,74,122,0.7));
+      outline: 3px solid rgba(42,122,200,0.7);
+      outline-offset: 4px;
+      border-radius: 10px;
     }
     .deck-pile.glow-hazak {
-      animation: glowPulseHazak 1.2s ease-in-out infinite;
-      filter: drop-shadow(0 0 12px rgba(196,150,46,0.7));
+      animation: glowPulseHazak 0.8s ease-in-out infinite;
+      filter: drop-shadow(0 0 12px rgba(255,214,0,0.7));
+      outline: 3px solid rgba(255,214,0,0.8);
+      outline-offset: 4px;
+      border-radius: 10px;
     }
     .deck-pile.glow-dual {
-      animation: glowPulseDual 1.5s ease-in-out infinite;
+      animation: glowPulseDual 1s ease-in-out infinite;
       filter: drop-shadow(0 0 15px rgba(196,154,60,0.8));
+      outline: 3px solid rgba(196,154,60,0.7);
+      outline-offset: 4px;
+      border-radius: 10px;
     }
-    @keyframes glowPulseMahkama { 0%,100% { filter: drop-shadow(0 0 8px rgba(42,74,122,0.5)); } 50% { filter: drop-shadow(0 0 20px rgba(42,74,122,0.9)) drop-shadow(0 0 40px rgba(42,74,122,0.4)); } }
-    @keyframes glowPulseHazak { 0%,100% { filter: drop-shadow(0 0 8px rgba(196,150,46,0.5)); } 50% { filter: drop-shadow(0 0 20px rgba(196,150,46,0.9)) drop-shadow(0 0 40px rgba(196,150,46,0.4)); } }
-    @keyframes glowPulseDual { 0%,100% { filter: drop-shadow(0 0 10px rgba(196,154,60,0.5)); } 50% { filter: drop-shadow(0 0 25px rgba(196,154,60,0.9)) drop-shadow(0 0 50px rgba(196,154,60,0.4)); } }
+    @keyframes glowPulseMahkama { 0%,100% { filter: drop-shadow(0 0 12px rgba(42,74,122,0.5)); } 50% { filter: drop-shadow(0 0 28px rgba(42,74,122,1)) drop-shadow(0 0 50px rgba(42,74,122,0.4)); } }
+    @keyframes glowPulseHazak { 0%,100% { filter: drop-shadow(0 0 12px rgba(255,214,0,0.5)); box-shadow: inset 0 0 15px rgba(255,214,0,0.1); } 50% { filter: drop-shadow(0 0 28px rgba(255,214,0,1)) drop-shadow(0 0 50px rgba(255,214,0,0.4)); box-shadow: inset 0 0 30px rgba(255,214,0,0.25); } }
+    @keyframes glowPulseDual { 0%,100% { filter: drop-shadow(0 0 12px rgba(196,154,60,0.5)); } 50% { filter: drop-shadow(0 0 28px rgba(196,154,60,1)) drop-shadow(0 0 50px rgba(196,154,60,0.4)); } }
 
     /* Dark mode overrides */
-    body.dark-mode #lobby-screen { background: var(--bg2); border-color: var(--border2); }
-    body.dark-mode #lobby-screen h1 { color: var(--text2); }
-    body.dark-mode .lobby-tabs button { background: var(--panel-bg); color: var(--text); border-color: var(--border); }
-    body.dark-mode .lobby-tabs button.active { background: #4a3a1a; color: #ffd700; border-color: var(--border2); }
-    body.dark-mode .lobby-panel label { color: var(--text2); }
-    body.dark-mode .lobby-panel input, body.dark-mode .lobby-panel select { background: var(--modal-bg); color: var(--text); border-color: var(--border); }
-    body.dark-mode .lobby-btn { background: var(--btn-primary); }
-    body.dark-mode .lobby-error { color: #ff6b6b; }
-    body.dark-mode .cell { background: var(--bg2) !important; border-color: var(--border) !important; }
-    body.dark-mode .cell.corner { background: #2a2a4a !important; }
-    body.dark-mode .center-cell { background: var(--board-bg) !important; border-color: var(--border2) !important; }
-    body.dark-mode .center-cell h2, body.dark-mode .center-cell .cc-title { color: var(--text2); }
-    body.dark-mode .center-cell .cc-timer { background: rgba(0,0,0,0.5); color: #8ab4f8; }
-    body.dark-mode .cell .cell-city { color: var(--text); }
-    body.dark-mode .cell .cell-section { color: var(--text); }
-    body.dark-mode #player-corners .player-card { background: var(--bg2) !important; border-color: var(--border) !important; }
-    body.dark-mode #player-corners .player-card .pc-label { color: var(--text2); }
-    body.dark-mode #player-corners .player-card .pc-money { color: #4caf50; }
-    body.dark-mode .modal-overlay .modal-box { background: var(--modal-bg); color: var(--text); border-color: var(--border2); }
-    body.dark-mode .modal-overlay h2, body.dark-mode .modal-overlay h3 { color: var(--text2); }
-    body.dark-mode .modal-overlay p { color: var(--text); }
-    body.dark-mode .btn { color: #fff; }
-    body.dark-mode #build-mgmt { background: var(--bg2); }
-    body.dark-mode #build-mgmt .build-row { border-color: var(--border); }
-    body.dark-mode #room-waiting p { color: var(--text3); }
-    body.dark-mode .room-code-display { background: var(--panel-bg); color: var(--text); border-color: var(--border2); }
-    body.dark-mode .lobby-players .lp-item { background: var(--bg); border-color: var(--border); color: var(--text); }
-    body.dark-mode #toast-container .toast { background: var(--card-bg); color: var(--card-color); }
-    body.dark-mode .trade-panel.mine { background: #1a1a3e; }
-    body.dark-mode .trade-panel.theirs { background: #3e1a1a; }
-    body.dark-mode .trade-panel { border-color: var(--border); }
+
 
     /* ── Toast repositioned inside center-cell ── */
     #toast-container {
@@ -828,11 +807,18 @@
           <option value="hidden">Hidden</option>
         </select>
       </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:6px;">
+        <label style="font-size:0.75rem;color:#7a5a3a;flex:1;">🤝 Trade Timing</label>
+        <select id="opt-trade-timing" style="width:90px;padding:4px 8px;border-radius:6px;border:1px solid #c4a96a;background:#fff;color:#3a2a1a;font-size:0.85rem;">
+          <option value="anytime" selected>Any Turn</option>
+          <option value="own_turn">Your Turn Only</option>
+        </select>
+      </div>
     </div>
     <div style="display:flex;gap:8px;align-items:center;margin-top:10px;border-top:1px solid #c4a96a;padding-top:10px;">
       <label style="font-size:0.75rem;color:#7a5a3a;flex:1;">🎨 My Theme</label>
-      <select id="theme-host" style="width:120px;padding:4px 8px;border-radius:6px;border:1px solid #c4a96a;background:#fff;color:#3a2a1a;font-size:0.85rem;"></select>
-      <button onclick="openPreview('host')" style="padding:4px 10px;border-radius:6px;border:1px solid #c4a96a;background:#faf0dc;color:#3a2a1a;font-size:0.8rem;cursor:pointer;">👁️</button>
+      <select id="theme-host" onmouseenter="previewHover()" onmouseleave="previewHoverEnd()" onchange="openPreview()" style="width:120px;padding:4px 8px;border-radius:6px;border:1px solid #c4a96a;background:#fff;color:#3a2a1a;font-size:0.85rem;"></select>
+      <button onmouseenter="previewHover()" onmouseleave="previewHoverEnd()" onclick="openPreview()" style="padding:4px 10px;border-radius:6px;border:1px solid #c4a96a;background:#faf0dc;color:#3a2a1a;font-size:0.8rem;cursor:pointer;">👁️</button>
     </div>
     <button class="lobby-btn" id="btn-host" onclick="hostGame()">🎮 Create Room</button>
     <div class="lobby-error" id="lobby-error-host"></div>
@@ -848,8 +834,8 @@
     <div class="pfp-grid" id="pfp-grid-join"></div>
     <div style="display:flex;gap:8px;align-items:center;margin-top:10px;border-top:1px solid #c4a96a;padding-top:10px;">
       <label style="font-size:0.75rem;color:#7a5a3a;flex:1;">🎨 My Theme</label>
-      <select id="theme-join" style="width:120px;padding:4px 8px;border-radius:6px;border:1px solid #c4a96a;background:#fff;color:#3a2a1a;font-size:0.85rem;"></select>
-      <button onclick="openPreview('join')" style="padding:4px 10px;border-radius:6px;border:1px solid #c4a96a;background:#faf0dc;color:#3a2a1a;font-size:0.8rem;cursor:pointer;">👁️</button>
+      <select id="theme-join" onmouseenter="previewHover()" onmouseleave="previewHoverEnd()" onchange="openPreview()" style="width:120px;padding:4px 8px;border-radius:6px;border:1px solid #c4a96a;background:#fff;color:#3a2a1a;font-size:0.85rem;"></select>
+      <button onmouseenter="previewHover()" onmouseleave="previewHoverEnd()" onclick="openPreview()" style="padding:4px 8px;border-radius:6px;border:1px solid #c4a96a;background:#faf0dc;color:#3a2a1a;font-size:0.8rem;cursor:pointer;">👁️</button>
     </div>
     <button class="lobby-btn" id="btn-join" onclick="joinGame()">🔗 Join Room</button>
     <div class="lobby-error" id="lobby-error-join"></div>
@@ -866,9 +852,8 @@
     </div>
   </div>
 
-  <!-- Saved game restore + dark mode -->
+  <!-- Saved game restore -->
   <div style="margin-top:16px;border-top:2px solid #c4a96a;padding-top:12px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
-    <button id="btn-dark-mode" onclick="toggleDarkMode()" style="padding:6px 16px;border-radius:8px;border:1px solid #c4a96a;background:#faf0dc;color:#5a3a0a;font-size:0.8rem;cursor:pointer;">🌙 Dark Mode</button>
     <button id="btn-restore-game" onclick="restoreSavedGame()" style="display:none;padding:6px 16px;border-radius:8px;border:1px solid #2e7d32;background:#e8f5e9;color:#2e7d32;font-size:0.8rem;cursor:pointer;">🔄 Resume Game</button>
     <button onclick="exportGameState()" style="padding:6px 16px;border-radius:8px;border:1px solid #c4a96a;background:#faf0dc;color:#5a3a0a;font-size:0.8rem;cursor:pointer;">📥 Export</button>
     <button onclick="document.getElementById('import-file-input').click()" style="padding:6px 16px;border-radius:8px;border:1px solid #c4a96a;background:#faf0dc;color:#5a3a0a;font-size:0.8rem;cursor:pointer;">📤 Import</button>
@@ -881,6 +866,23 @@
   <div class="game-layout">
 
     <button id="btn-players-float" onclick="openPlayerList()" style="position:fixed;top:12px;right:12px;z-index:50;padding:6px 14px;border-radius:8px;border:none;background:rgba(90,58,26,0.8);color:#ffd700;font-size:0.85rem;cursor:pointer;">👥 Players</button>    <div id="board"></div>
+
+    <div id="remote-control" style="display:none;">
+      <div class="rc-row">
+        <button class="btn btn-primary rc-roll" id="rc-btn-roll" onclick="rollDice()" disabled>🎲 Roll</button>
+      </div>
+      <div class="rc-row rc-secondary">
+        <button class="btn btn-trade" id="rc-btn-trade" onclick="openTrade()" disabled>🤝 Trade</button>
+        <button class="btn btn-choice" id="rc-btn-bid" onclick="openBid()" disabled>📢 Bid</button>
+        <button class="btn btn-choice" onclick="openInventory()">📦 My Stuff</button>
+      </div>
+      <div class="rc-prison" id="rc-prison-actions" style="display:none;">
+        <span>🔒 In prison</span>
+        <button class="btn btn-skip" onclick="skipPrison()">⏭️ Skip</button>
+        <button class="btn btn-bail" onclick="payBail()">💰 Bail</button>
+        <button class="btn btn-jailfree" id="rc-btn-use-jailfree" onclick="useJailFree()" style="display:none">🔓 Free</button>
+      </div>
+    </div>
 
     <div id="player-corners"></div>
 
@@ -1074,6 +1076,12 @@
     <button class="btn btn-decline" onclick="closePlayerList()" style="margin-top:12px;font-size:0.85rem;padding:6px 18px;">❌ Close</button>
   </div>
 </div>
+
+<div class="modal-overlay" id="player-action-popup" onclick="if(event.target===this)closePlayerActionPopup()">
+  <div class="modal-box" style="max-width:320px;text-align:center;">
+    <div id="player-action-content"></div>
+  </div>
+</div>
 <script type="module">
   import boardData from './board.json' with { type: 'json' };
 
@@ -1155,7 +1163,7 @@
   const CORNER_ICONS = { 1: '🏁', 8: '🎰', 18: '🚌', 25: '🔒' };
   const COLOR_BG_MAP = {
     purple: '#9b59b6', pink: '#ff80ab', orange: '#ff9800',
-    yellow: '#f9a825', brown: '#795548', green: '#4caf50',
+    yellow: '#FFEB3B', brown: '#795548', green: '#4caf50',
     cyan: '#00bcd4', white: '#90a4ae', red: '#f44336',
     utility: '#607d8b'
   };
@@ -1213,20 +1221,6 @@
     event.target.value = '';
   }
 
-  // ── Dark Mode ──
-  function toggleDarkMode() {
-    document.body.classList.toggle('dark-mode');
-    const isDark = document.body.classList.contains('dark-mode');
-    localStorage.setItem('bankelhaz_darkmode', isDark ? '1' : '0');
-    const btn = document.getElementById('btn-dark-mode');
-    if (btn) btn.textContent = isDark ? '☀️ Light Mode' : '🌙 Dark Mode';
-  }
-  // Init dark mode from saved preference
-  if (localStorage.getItem('bankelhaz_darkmode') === '1') {
-    document.body.classList.add('dark-mode');
-    const btn = document.getElementById('btn-dark-mode');
-    if (btn) btn.textContent = '☀️ Light Mode';
-  }
   checkSavedGame();
 
   // ── Auto-detect theme folders ──
@@ -1317,7 +1311,8 @@
       startingCash: parseInt(document.getElementById('opt-starting-cash').value) || 1500,
       passGoSalary: parseInt(document.getElementById('opt-passgo-salary').value) || 250,
       diceCount: parseInt(document.getElementById('opt-dice-count').value) || 2,
-      moneyVisible: document.getElementById('opt-money-visibility').value === 'visible'
+      moneyVisible: document.getElementById('opt-money-visibility').value === 'visible',
+      tradeTiming: document.getElementById('opt-trade-timing').value
     };
     document.getElementById('lobby-error-host').textContent = '';
     document.getElementById('btn-host').disabled = true;
@@ -1500,7 +1495,18 @@
       updateLobbyPlayers(data.players);
     } else {
       showToast('🔄 A player reconnected');
+      // Update local gameState references from old ID to new ID
+      if (gameState && data.oldPlayerId && data.playerId) {
+        const oldId = data.oldPlayerId, newId = data.playerId;
+        gameState.players.forEach(p => { if (p.id === oldId) p.id = newId; });
+        gameState.boardSquares.forEach(sq => { if (sq.owner === oldId) sq.owner = newId; });
+        if (gameState.pendingPropertyBuy?.playerId === oldId) gameState.pendingPropertyBuy.playerId = newId;
+        if (gameState.pendingRentPayment?.playerId === oldId) gameState.pendingRentPayment.playerId = newId;
+        if (gameState.pendingRentPayment?.ownerId === oldId) gameState.pendingRentPayment.ownerId = newId;
+        if (gameState.pendingDeckDraw?.playerId === oldId) gameState.pendingDeckDraw.playerId = newId;
+      }
       renderPlayerCorners();
+      renderTokens(gameState);
     }
   });
 
@@ -2191,7 +2197,7 @@
           </div>
         `;
       } else if (sq.type === 'deck_trigger' || sq.type === 'dual_deck_trigger') {
-        cell.innerHTML = `<div class="cell-section deck-label">${getDeckIcon(sq)}</div><div class="cell-section" style="font-size:0.6rem;color:#6a4a1a;">${sq.name}</div>`;
+        cell.innerHTML = `<div class="cell-section deck-label">${getDeckIcon(sq)}</div><div class="cell-section" style="font-size:0.75rem;color:#5a3a0a;font-weight:bold;">${sq.name}</div>`;
       }
 
       const tokensDiv = document.createElement('div');
@@ -2276,6 +2282,7 @@
     hazakPile.onclick = () => onDeckClick('hazak');
     board.appendChild(hazakPile);
     applyDeckTheme(hazakPile, 'deck-hazak');
+    setTimeout(window.resizeBoard, 50);
   }
 
   // ── Player corner panels ──
@@ -2292,15 +2299,6 @@
     state.players.forEach((p, i) => {
       const cornerClass = corners[i % corners.length] || 'corner-tl';
       const isCurrent = i === state.currentPlayerIndex;
-      const owned = state.boardSquares.filter(sq => sq.owner === p.id);
-      const propsHtml = owned.length > 0
-        ? owned.map(sq => {
-            const bg = getColorGroupBG(sq.color_group) || '#607d8b';
-            const bldg = sq.upgrade === 'garage' ? '🏗️' : sq.upgrade === 'rest_stop' ? '🏡' : sq.upgrade === 'market' ? '🏬' : '';
-            const avatarNum = p.avatar || 1;
-            return `<span class="mini-card" style="background:${bg}" title="${sq.name}" draggable="true" ondragstart="onPropDrag(event, ${sq.id}, '${sq.name}', '${sq.color_group || ''}')">${sq.name}${bldg}</span>`;
-          }).join('')
-        : '<span style="color:#999;">No properties</span>';
       const invItems = [];
       if (p.isClubMember) invItems.push('<span class="mini-inv-badge" style="background:linear-gradient(135deg,#fff3e0,#ffe0b2);border:1px solid #ff9800;">🎰 Club</span>');
       if ((p.inventory?.jailFreeCards || 0) > 0) invItems.push(`<span class="mini-inv-badge" style="background:linear-gradient(135deg,#fce4ec,#f8bbd0);border:1px solid #c62828;">🔓 Jail×${p.inventory.jailFreeCards}</span>`);
@@ -2308,13 +2306,12 @@
       const avatarNum = p.avatar || 1;
       const showMoney = state.gameMeta?.moneyVisible !== false || p.id === myPlayerId;
       const moneyDisplay = showMoney ? `$${p.money}` : '💰 ???';
-      const canTrade = !p.isBankrupt && p.id !== myPlayerId;
+      const clickable = !p.isBankrupt;
       html += `
-        <div class="player-corner ${cornerClass} ${isCurrent ? 'current-turn' : ''} ${p.isBankrupt ? 'bankrupt' : ''} ${p.connected === false ? 'disconnected' : ''}" data-player-id="${p.id}" style="${canTrade ? 'cursor:pointer;' : ''}" ${canTrade ? `onclick="startTradeWith('${p.id}')"` : ''}>
+        <div class="player-corner ${cornerClass} ${isCurrent ? 'current-turn' : ''} ${p.isBankrupt ? 'bankrupt' : ''} ${p.connected === false ? 'disconnected' : ''}" data-player-id="${p.id}" style="${clickable ? 'cursor:pointer;' : ''}" ${clickable ? `onclick="onPlayerCardClick('${p.id}')"` : ''}>
           <div class="pc-header"><img src="${getPfpUrl(avatarNum)}" alt="" />${p.name}${p.connected === false ? ' 🔴' : ''}</div>
           <div class="pc-money">${moneyDisplay}</div>
           ${invItems.length > 0 ? `<div class="pc-inv" style="display:flex;gap:3px;flex-wrap:wrap;">${invItems.join('')}</div>` : ''}
-          <div class="pc-props">${propsHtml}</div>
           ${status ? `<div class="pc-status">${status}</div>` : ''}
         </div>
       `;
@@ -2517,6 +2514,29 @@
       if (btnBid) btnBid.disabled = false;
       if (debugArea) debugArea.style.display = 'none';
       document.getElementById('prison-actions').classList.remove('show');
+    }
+
+    // Mirror button states to remote control
+    const rcRoll = document.getElementById('rc-btn-roll');
+    const rcTrade = document.getElementById('rc-btn-trade');
+    const rcBid = document.getElementById('rc-btn-bid');
+    const rcPrison = document.getElementById('rc-prison-actions');
+    const rcJailFree = document.getElementById('rc-btn-use-jailfree');
+    if (rcRoll) { rcRoll.disabled = btnRoll.disabled; rcRoll.textContent = btnRoll.textContent; }
+    if (rcTrade) rcTrade.disabled = btnTrade.disabled;
+    if (rcBid) rcBid.disabled = btnBid ? btnBid.disabled : true;
+    if (rcPrison) {
+      const inPrison = document.getElementById('prison-actions')?.classList.contains('show');
+      if (inPrison && isMyTurn) {
+        rcPrison.style.display = '';
+        if (rcJailFree && curPlayer) {
+          const hasCards = curPlayer.inventory.jailFreeCards > 0;
+          rcJailFree.style.display = hasCards ? '' : 'none';
+          if (hasCards) rcJailFree.textContent = `🔓 Jail-Free (${curPlayer.inventory.jailFreeCards})`;
+        }
+      } else {
+        rcPrison.style.display = 'none';
+      }
     }
 
     // Rent actions (persistent button on board)
@@ -2825,6 +2845,49 @@
       });
     });
     document.getElementById('player-selector').classList.add('show');
+  };
+
+  window.onPlayerCardClick = (playerId) => {
+    if (!gameState) return;
+    const player = gameState.players.find(p => p.id === playerId);
+    if (!player || player.isBankrupt) return;
+    const isSelf = playerId === myPlayerId;
+    const avatarNum = player.avatar || 1;
+    const popup = document.getElementById('player-action-popup');
+    const content = document.getElementById('player-action-content');
+    let html = `<div class="popup-header"><img src="${getPfpUrl(avatarNum)}" /> <strong>${player.name}</strong></div><div class="popup-actions">`;
+    if (!isSelf) {
+      html += `<button class="btn btn-trade" onclick="closePlayerActionPopup();startTradeWith('${playerId}')">🤝 Trade</button>`;
+    }
+    html += `<button class="btn" onclick="closePlayerActionPopup();viewPlayerProperties('${playerId}')">🏠 View Properties</button>`;
+    html += `<button class="btn btn-decline" onclick="closePlayerActionPopup()">❌ Cancel</button>`;
+    html += `</div>`;
+    content.innerHTML = html;
+    popup.classList.add('show');
+  };
+
+  window.closePlayerActionPopup = () => {
+    document.getElementById('player-action-popup').classList.remove('show');
+  };
+
+  window.viewPlayerProperties = (playerId) => {
+    if (!gameState) return;
+    const player = gameState.players.find(p => p.id === playerId);
+    if (!player) return;
+    const owned = gameState.boardSquares.filter(sq => sq.owner === playerId);
+    const content = document.getElementById('inspect-content');
+    let html = `<div class="prop-header" style="background:#5a3a1a;color:#ffd700;">🏠 ${player.name}'s Properties</div>`;
+    if (owned.length === 0) {
+      html += `<div style="padding:12px;color:#999;text-align:center;">No properties owned</div>`;
+    } else {
+      owned.forEach(sq => {
+        const bg = getColorGroupBG(sq.color_group) || '#607d8b';
+        const bldg = sq.upgrade === 'garage' ? '🏗️' : sq.upgrade === 'rest_stop' ? '🏡' : sq.upgrade === 'market' ? '🏬' : '';
+        html += `<div class="prop-detail" style="background:${bg}22;padding:4px 8px;border-radius:4px;margin:2px 0;"><span style="font-weight:bold;">${sq.name}</span> ${bldg} <span style="float:right;color:#2e7d32;">$${sq.purchase_price}</span></div>`;
+      });
+    }
+    content.innerHTML = html;
+    document.getElementById('inspect-modal').classList.add('show');
   };
 
   window.startTradeWith = (targetId) => {
@@ -3588,6 +3651,7 @@
   }
 
   // ── Preview modal ──
+  let previewTimer = null;
   window.openPreview = function() {
     const theme = document.querySelector('#theme-host, #theme-join')?.value || 'plain';
     const modal = document.getElementById('preview-modal');
@@ -3599,6 +3663,15 @@
     board.className = 'preview-board';
     renderPreviewBoard(board, theme);
     container.appendChild(board);
+  };
+
+  window.previewHover = function() {
+    if (previewTimer) clearTimeout(previewTimer);
+    previewTimer = setTimeout(window.openPreview, 300);
+  };
+
+  window.previewHoverEnd = function() {
+    if (previewTimer) { clearTimeout(previewTimer); previewTimer = null; }
   };
 
   function closePreview() {
@@ -3683,6 +3756,45 @@
     center.innerHTML = '<div class="cc-title">🏦 بنك الحظ</div>';
     boardEl.appendChild(center);
   }
+
+  // ── Responsive board scaling ──
+  const BOARD_W = 1064, BOARD_H = 735;
+  window.resizeBoard = function() {
+    const board = document.getElementById('board');
+    if (!board) return;
+    const vw = window.innerWidth, vh = window.innerHeight;
+    if (vw === 0) return;
+    const isPortrait = window.matchMedia('(orientation: portrait)').matches;
+
+    if (isPortrait && vw <= 600) {
+      // Portrait mobile: fit width with some padding, cap at top half
+      const pad = 16;
+      const maxW = vw - pad * 2;
+      const maxH = vh * 0.48;
+      let s = Math.min(maxW / BOARD_W, maxH / BOARD_H);
+      s = Math.max(s, 0.2);
+      board.style.transform = `scale(${s})`;
+      board.style.transformOrigin = 'top center';
+      board.style.marginBottom = `${s * BOARD_H - BOARD_H}px`;
+    } else if (vw <= 1100 && vw < vh * 1.3) {
+      // Landscape mobile/tablet: board on left, player panel on right
+      const sideW = 180;
+      const pad = 12;
+      const maxW = vw - sideW - pad * 2;
+      const maxH = vh - pad * 2;
+      let s = Math.min(maxW / BOARD_W, maxH / BOARD_H, 0.75);
+      s = Math.max(s, 0.2);
+      board.style.transform = `scale(${s})`;
+      board.style.transformOrigin = 'left center';
+      board.style.marginBottom = `${s * BOARD_H - BOARD_H}px`;
+    } else {
+      board.style.transform = '';
+      board.style.marginBottom = '';
+    }
+  };
+
+  window.addEventListener('resize', window.resizeBoard);
+  window.addEventListener('orientationchange', () => setTimeout(window.resizeBoard, 300));
 </script>
 
 <!-- ── Preview Modal ── -->
