@@ -221,11 +221,11 @@
     .cell.dual_deck_trigger .deck-label { font-size: 1.6rem; color: #5a3a0a; font-weight: bold; }
     .cell.dual_deck_trigger .deck-icon { font-size: 2.4rem; }
     .p13, .p30 { height: 120px; align-self: center; background: #dccb9a; border: 3px solid #8B6914; border-radius: 10px; }
-    .p11, .p21 { height: 120px; align-self: center; background: #d4c4a0; border: 3px solid #8B6914; border-radius: 10px; }
+    .p11 { height: 120px; align-self: center; background: #d4c4a0; border: 3px solid #8B6914; border-radius: 10px; }
     .p13 .deck-label, .p30 .deck-label { font-size: 2.4rem; }
-    .p11 .deck-label, .p21 .deck-label { font-size: 2.4rem; }
+    .p11 .deck-label { font-size: 2.4rem; }
     .p13 .cell-section:last-child, .p30 .cell-section:last-child,
-    .p11 .cell-section:last-child, .p21 .cell-section:last-child { font-size: 1rem; font-weight: bold; color: #5a3a0a; }
+    .p11 .cell-section:last-child { font-size: 1rem; font-weight: bold; color: #5a3a0a; }
     .cell.corner_square { background: #e8d5a3; border: 3px solid #8B6914; }
     .cell.corner_square .corner-icon, .cell.corner .corner-icon { font-size: 1.8rem; margin-bottom: 2px; position: relative; }
     .cell.corner_square .corner-icon img, .cell.corner .corner-icon img { display: block; margin: 0 auto; object-fit: contain; width: 32px; height: 32px; }
@@ -403,6 +403,7 @@
       border: 3px solid #b8962e;
       box-shadow: 0 8px 32px rgba(196,150,46,0.3);
     }
+    #card-draw-modal .card-face.hazak-face .card-type { color: #8b6914; }
     #card-draw-modal .card-face.hazak-face::before { border-color: rgba(196,150,46,0.3); }
     #card-draw-modal .card-face.hazak-face::after { border-color: rgba(196,150,46,0.15); }
     @keyframes cardDeal {
@@ -410,8 +411,8 @@
       60% { transform: scale(1.05) rotateY(-5deg) translateY(0); opacity: 1; }
       100% { transform: scale(1) rotateY(0deg) translateY(0); opacity: 1; }
     }
-    #card-draw-modal .card-face .card-header { font-size: 2rem; margin-bottom: 6px; }
-    #card-draw-modal .card-face .card-type { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; color: #8B7355; border-bottom: 1px solid #d4c5a9; padding-bottom: 8px; margin-bottom: 10px; }
+    #card-draw-modal .card-face .card-header { font-size: 3rem; margin-bottom: 6px; }
+    #card-draw-modal .card-face .card-type { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 2px; color: #8B7355; border-bottom: 1px solid #d4c5a9; padding-bottom: 8px; margin-bottom: 10px; }
     #card-draw-modal .card-face .card-description { font-size: 1rem; line-height: 1.5; color: #3a2a1a; margin-bottom: 10px; }
     }
 
@@ -2050,7 +2051,9 @@
     title.textContent = isMahkama ? `⚖️ محكمة ${prefix}` : `🍀 حظك ${prefix}`;
 
     const face = document.getElementById('card-face-content');
-    face.classList.toggle('mahkama-face', isMahkama);
+    face.classList.remove('mahkama-face', 'hazak-face');
+    if (isMahkama) face.classList.add('mahkama-face');
+    else face.classList.add('hazak-face');
 
     const header = document.getElementById('card-face-header');
     header.textContent = isMahkama ? '⚖️' : '🍀';
@@ -2311,7 +2314,7 @@
     const mahkamaPile = document.createElement('div');
     mahkamaPile.className = 'deck-pile mahkama-pile';
     mahkamaPile.dataset.deck = 'mahkama';
-    mahkamaPile.innerHTML = `<div class="card-back mahkama-back">⚖️</div><div class="deck-label">المحكمة (${gameState.mahkamaDeck?.length || 0})</div>`;
+    mahkamaPile.innerHTML = `<div class="card-back mahkama-back">⚖️</div><div class="deck-label">⚖️ المحكمة (${gameState.mahkamaDeck?.length || 0})</div>`;
     mahkamaPile.onclick = () => onDeckClick('mahkama');
     board.appendChild(mahkamaPile);
     applyDeckTheme(mahkamaPile, 'deck-mahkama');
@@ -2319,7 +2322,7 @@
     const hazakPile = document.createElement('div');
     hazakPile.className = 'deck-pile hazak-pile';
     hazakPile.dataset.deck = 'hazak';
-    hazakPile.innerHTML = `<div class="card-back hazak-back">🍀</div><div class="deck-label">حظك (${gameState.hazakDeck?.length || 0})</div>`;
+    hazakPile.innerHTML = `<div class="card-back hazak-back">🍀</div><div class="deck-label">🍀 حظك (${gameState.hazakDeck?.length || 0})</div>`;
     hazakPile.onclick = () => onDeckClick('hazak');
     board.appendChild(hazakPile);
     applyDeckTheme(hazakPile, 'deck-hazak');
@@ -2708,8 +2711,8 @@
         const title = document.getElementById('card-modal-title');
         const cp = state.players.find(p => p.id === state.activeCardChoice.playerId);
         const choice = state.activeCardChoice;
-        const isMahkama = choice.type === 'cash_or_free_property' || choice.type === 'pay_or_prison';
-        title.textContent = isMahkama ? `⚖️ ${cp ? cp.name : 'You'} — اختر` : `⚖️ ${cp ? cp.name : 'You'} — Choose`;
+        const emoji = choice._deckType === 'mahkama' ? '⚖️' : '🍀';
+        title.textContent = `${emoji} ${cp ? cp.name : 'You'} — اختر`;
         const body = document.getElementById('card-modal-body');
         body.innerHTML = '';
         if (choice.title) {
@@ -2799,7 +2802,9 @@
     const isMahkama = data.deckType === 'mahkama';
     document.getElementById('blind-card-title').textContent = isMahkama ? `⚖️ ${playerName} drew المحكمة` : `🍀 ${playerName} drew حظك`;
     const face = document.getElementById('card-face-content');
-    face.classList.toggle('mahkama-face', isMahkama);
+    face.classList.remove('mahkama-face', 'hazak-face');
+    if (isMahkama) face.classList.add('mahkama-face');
+    else face.classList.add('hazak-face');
     document.getElementById('card-face-header').textContent = isMahkama ? '⚖️' : '🍀';
     document.getElementById('card-face-type').textContent = isMahkama ? '⚖️ المحكمة' : '🍀 حظك';
     document.getElementById('card-face-desc').textContent = data.card.description || '—';
