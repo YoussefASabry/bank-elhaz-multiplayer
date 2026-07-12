@@ -2194,9 +2194,6 @@
   }
 
   function getDeckIcon(sq) {
-    const key = sq.deck_type || '';
-    const imgHtml = cornerImageHtml(key, 22, 22);
-    if (imgHtml) return imgHtml;
     if (sq.type === 'dual_deck_trigger') return '⚖️🍀';
     return sq.deck_type === 'mahkama' ? '⚖️' : '🍀';
   }
