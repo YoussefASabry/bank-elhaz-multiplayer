@@ -551,27 +551,15 @@ function evaluateLandingAfterCard(playerId, square) {
 
 function handleDeckTriggerOnTeleport(player, square) {
   const state = getState();
-  const deckType = square.deck_type || (square.type === 'dual_deck_trigger' ? 'mahkama' : 'hazak'); // Dual deck draws Mahkama first
+  const deckType = square.deck_type || 'hazak'; // For dual, just pick hazak for teleport
 
-  if (square.type === 'dual_deck_trigger') {
-    log(`   ⚖️  ${square.name} — drawing TWO cards (teleport triggered)...`);
-    const card1 = drawCard('mahkama');
-    if (card1) {
-      state.pendingSecondCard = true; // Flag to draw a second card (Hazak)
-      state.blindCard = { card: card1, playerId: player.id, squareName: square.name, deckType: 'mahkama', cardNumber: 1 };
-      state.phase = 'blind_card';
-    } else {
-      finishTurn(player.id);
-    }
+  log(`   🃏 ${square.name} — drawing a card (teleport triggered)...`);
+  const card = drawCard(deckType);
+  if (card) {
+    state.blindCard = { card, playerId: player.id, squareName: square.name, deckType };
+    state.phase = 'blind_card';
   } else {
-    log(`   🃏 ${square.name} — drawing a card (teleport triggered)...`);
-    const card = drawCard(deckType);
-    if (card) {
-      state.blindCard = { card, playerId: player.id, squareName: square.name, deckType };
-      state.phase = 'blind_card';
-    } else {
-      finishTurn(player.id);
-    }
+    finishTurn(player.id);
   }
 }
 

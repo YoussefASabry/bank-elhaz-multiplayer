@@ -455,13 +455,13 @@
     .big-text {
       font-size: 2.5rem; font-weight: bold; color: #ffd700;
       text-shadow: 0 0 20px rgba(255,215,0,0.6), 0 0 40px rgba(255,215,0,0.3), 0 3px 8px rgba(0,0,0,0.7);
-      animation: bigTextIn 0.35s ease forwards, bigTextOut 0.6s ease 1.5s forwards;
-      opacity: 0; transform: scale(0.6);
+      animation: bigTextIn 0.2s linear forwards, bigTextOut 0.3s linear 1.2s forwards;
+      opacity: 0;
     }
     .big-text.big-loss { color: #ff4444; text-shadow: 0 0 20px rgba(255,68,68,0.6), 0 0 40px rgba(255,68,68,0.3), 0 3px 8px rgba(0,0,0,0.7); }
     .big-text.big-celebrate { color: #ffd700; text-shadow: 0 0 25px rgba(255,215,0,0.7), 0 0 50px rgba(255,215,0,0.3), 0 3px 8px rgba(0,0,0,0.7); }
-    @keyframes bigTextIn { 0% { opacity: 0; transform: scale(0.6) translateX(80px); } to { opacity: 1; transform: scale(1) translateX(0); } }
-    @keyframes bigTextOut { 0% { opacity: 1; transform: scale(1) translateX(0); } to { opacity: 0; transform: scale(1.2) translateX(-80px); } }
+    @keyframes bigTextIn { 0% { opacity: 0; } to { opacity: 1; } }
+    @keyframes bigTextOut { 0% { opacity: 1; } to { opacity: 0; } }
 
     /* Center dice overlay */
     #center-dice {
@@ -2412,6 +2412,11 @@
     try {
     if (!gameState) { console.log('updateUI: no gameState'); return; }
     const state = gameState;
+
+    // Close all turn-limited modals when state changes
+    ['buy-modal','upgrade-modal','card-draw-modal','inspect-modal','inventory-modal','trade-modal'].forEach(id => {
+      document.getElementById(id)?.classList.remove('show');
+    });
 
     const deckEl = document.getElementById('deck-count');
     if (deckEl) deckEl.textContent = `🍀: ${state.hazakDeck?.length || 0} | ⚖️: ${state.mahkamaDeck?.length || 0}`;

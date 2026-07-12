@@ -292,39 +292,20 @@ export class GameEngine {
     if (!pending || pending.playerId !== playerId) return null;
     if (pending.deckType !== deckType && pending.deckType !== 'dual') return null;
 
-    if (pending.deckType === 'dual') {
-      const card = this.drawCard(deckType);
-      if (card) {
-        let extra = {};
-        if (card.action === 'collect_from_city_owners') {
-          extra = this.preSelectCitiesForCard(card);
-        }
-        gs.blindCard = { card, playerId, squareName: pending.squareName, deckType, ...extra };
-        const otherDeck = deckType === 'mahkama' ? 'hazak' : 'mahkama';
-        gs.pendingDeckDraw = { playerId, deckType: otherDeck, squareName: pending.squareName };
-        gs.phase = 'blind_card';
-        return { card, cardNumber: 1, deckType, pendingSecondCard: false, ...extra };
-      } else {
-        gs.pendingDeckDraw = null;
-        this.finishTurn();
-        return null;
+    const card = this.drawCard(deckType);
+    if (card) {
+      let extra = {};
+      if (card.action === 'collect_from_city_owners') {
+        extra = this.preSelectCitiesForCard(card);
       }
+      gs.blindCard = { card, playerId, squareName: pending.squareName, deckType, ...extra };
+      gs.pendingDeckDraw = null;
+      gs.phase = 'blind_card';
+      return { card, cardNumber: 1, deckType, pendingSecondCard: false, ...extra };
     } else {
-      const card = this.drawCard(deckType);
-      if (card) {
-        let extra = {};
-        if (card.action === 'collect_from_city_owners') {
-          extra = this.preSelectCitiesForCard(card);
-        }
-        gs.blindCard = { card, playerId, squareName: pending.squareName, deckType, ...extra };
-        gs.pendingDeckDraw = null;
-        gs.phase = 'blind_card';
-        return { card, cardNumber: 1, deckType, pendingSecondCard: false, ...extra };
-      } else {
-        gs.pendingDeckDraw = null;
-        this.finishTurn();
-        return null;
-      }
+      gs.pendingDeckDraw = null;
+      this.finishTurn();
+      return null;
     }
   }
 
