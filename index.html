@@ -571,12 +571,11 @@
       #board { position: relative; top: auto; left: auto; transform-origin: top center; margin: 0; z-index: 1; flex-shrink: 0; }
       #remote-control { display: block !important; flex-shrink: 0; width: 100%; max-width: 400px; }
       #rc-status { display: flex !important; }
-      .center-cell #turn-banner, .center-cell #timer-bar, .center-cell #center-dice-area { display: none !important; }
-      #rc-dice-area { margin: 4px 0; }
+      .center-cell #center-dice-area { display: none !important; }
+      #rc-turn-banner, #rc-timer-bar { display: none !important; }
+      #rc-dice-area { margin: 4px 0; display: flex; gap: 6px; justify-content: center; align-items: center; flex-wrap: wrap; }
       #rc-dice-area .die { width: 60px !important; height: 60px !important; font-size: 2rem !important; }
       #rc-dice-area .die.rolling { animation: diceShake 0.3s ease-in-out; }
-      #rc-turn-banner { font-size: 1.2rem !important; }
-      #rc-timer-bar { font-size: 1.1rem !important; }
       #player-corners { flex-shrink: 0; position: relative; width: 100%; height: auto; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; padding: 6px 4px; top: auto; left: auto; pointer-events: auto; }
       .player-corner { position: relative; top: auto !important; left: auto !important; right: auto !important; bottom: auto !important; transform: none !important; min-width: 0; max-width: none; width: calc(50% - 6px); padding: 5px 8px; font-size: 0.65rem; gap: 3px; border-radius: 8px; }
       .player-corner .pc-header { font-size: 0.7rem; gap: 3px; }
@@ -584,18 +583,19 @@
       .player-corner .pc-money { font-size: 0.7rem; padding: 2px 5px; }
       .player-corner .pc-status { font-size: 0.5rem; }
       .player-corner .mini-inv-badge { font-size: 0.5rem; padding: 2px 4px; }
-      .center-cell { padding: 8px 6px 4px; }
-      .center-cell .center-pfp { width: 85px; height: 85px; }
+      .center-cell { padding: 12px 6px 6px; }
+      .center-cell .center-pfp { width: 100px; height: 100px; margin-bottom: 6px; }
+      .center-cell .turn-banner { font-size: 1.6rem; font-weight: 900; }
+      .center-cell .cc-timer { font-size: 1.4rem; padding: 6px 12px; }
+      .center-cell .cc-timer .timer-fill { width: 100px; height: 12px; }
       .center-cell .center-dice .die { width: 85px; height: 85px; font-size: 2.8rem; }
       .center-cell .cc-actions { display: none !important; }
       .center-cell .cc-prison { display: none !important; }
-      .center-cell .cc-timer { font-size: 1.2rem; padding: 4px 12px; }
-      .center-cell .cc-timer .timer-fill { width: 80px; height: 10px; }
-      .center-cell .turn-banner { font-size: 1.4rem; }
-      .cell { font-size: 0.9rem; }
-      .cell .cell-city { font-size: 0.8rem; }
-      .cell .cell-price-section { font-size: 0.75rem; }
-      .cell .players-here .ptoken { width: 22px; height: 22px; }
+      .cell { font-size: 1rem; font-weight: 700; }
+      .cell .cell-city { font-size: 0.85rem; font-weight: 700; }
+      .cell .cell-price-section { font-size: 0.8rem; font-weight: 700; }
+      .cell .players-here .ptoken { width: 28px; height: 28px; }
+      .cell .players-here .ptoken.moving { width: 36px; height: 36px; }
       .cell.deck_trigger .deck-label, .cell.dual_deck_trigger .deck-label { font-size: 2.8rem; line-height: 1.2; }
       .cell.deck_trigger .deck-label img, .cell.dual_deck_trigger .deck-label img { width: 36px !important; height: 36px !important; }
       .p13 .deck-label, .p30 .deck-label { font-size: 3.6rem; }
@@ -1627,24 +1627,28 @@
     // Animate dice in center of board only
     const cd1 = document.getElementById('cdie1');
     const cd2 = document.getElementById('cdie2');
-    if (cd1) cd1.classList.add('rolling');
-    if (cd2) cd2.classList.add('rolling');
+    const rd1 = document.getElementById('rc-die1');
+    const rd2 = document.getElementById('rc-die2');
+    const d1 = cd1 || rd1;
+    const d2 = cd2 || rd2;
+    if (d1) d1.classList.add('rolling');
+    if (d2) d2.classList.add('rolling');
 
     let ticks = 0;
     const totalTicks = 22;
     function diceTick() {
       const face1 = DICE_FACES[Math.floor(Math.random() * 6) + 1];
       const face2 = DICE_FACES[Math.floor(Math.random() * 6) + 1];
-      if (cd1) cd1.textContent = face1;
-      if (cd2) cd2.textContent = face2;
+      if (d1) d1.textContent = face1;
+      if (d2) d2.textContent = face2;
       ticks++;
       if (ticks >= totalTicks) {
-        if (cd1) cd1.classList.remove('rolling');
-        if (cd2) cd2.classList.remove('rolling');
+        if (d1) d1.classList.remove('rolling');
+        if (d2) d2.classList.remove('rolling');
         const f1 = DICE_FACES[roll.die1] || '?';
         const f2 = DICE_FACES[roll.die2] || '?';
-        if (cd1) cd1.textContent = f1;
-        if (cd2) cd2.textContent = f2;
+        if (d1) d1.textContent = f1;
+        if (d2) d2.textContent = f2;
         setTimeout(() => showBigText(`${roll.die1 + roll.die2}`, true, ''), 500);
         setTimeout(() => animateToken(roll, roll.playerId === myPlayerId), 800);
       } else {
@@ -3869,12 +3873,12 @@
     if (window.matchMedia('(orientation: portrait) and (max-width: 600px)').matches) {
       const pad = 4;
       const maxW = vw - pad * 2;
-      const maxH = vh * 0.58;
+      const maxH = vh * 0.62;
       let s = Math.min(maxW / BOARD_W, maxH / BOARD_H, 0.8);
       s = Math.max(s, 0.28);
       board.style.transform = `scale(${s})`;
       board.style.transformOrigin = 'top center';
-      board.style.marginTop = `16px`;
+      board.style.marginTop = `32px`;
       board.style.marginBottom = `${s * BOARD_H - BOARD_H}px`;
       board.style.marginLeft = '';
       board.style.marginRight = '';
