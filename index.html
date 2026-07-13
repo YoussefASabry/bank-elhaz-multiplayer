@@ -142,9 +142,10 @@
     .player-corner .pc-money { font-family: monospace; font-weight: bold; color: #2e7d32; font-size: 0.9rem; transition: color 0.3s, background 0.3s; padding: 2px 6px; border-radius: 4px; }
     .player-corner .pc-money.flash-gain { color: #fff; background: rgba(76,175,80,0.6); }
     .player-corner .pc-money.flash-loss { color: #fff; background: rgba(244,67,54,0.6); }
-    .player-corner .pc-props { display: none; }
+    .player-corner .pc-props { display: flex; flex-wrap: wrap; gap: 2px; max-height: 48px; overflow-y: auto; }
     .player-corner .pc-status { font-size: 0.7rem; color: #c0392b; font-weight: bold; }
     .player-corner .mini-inv-badge { font-size:0.6rem; padding:1px 4px; border-radius:4px; font-weight:bold; }
+    .player-corner .pc-props .mini-card { display:inline-flex; flex-direction:column; align-items:center; gap:1px; padding:1px 3px; min-width:32px; border-radius:3px; font-size:0.5rem; line-height:1.1; text-align:center; border:1px solid rgba(0,0,0,0.15); }
 
     /* Player action popup */
     #player-action-content .popup-header { display: flex; align-items: center; gap: 10px; justify-content: center; margin-bottom: 12px; font-size: 1.1rem; }
@@ -2369,6 +2370,7 @@
         <button class="btn btn-bail" onclick="payBail()">💰 Bail ($50)</button>
         <button class="btn btn-jailfree" id="btn-use-jailfree" onclick="useJailFree()" style="display:none">🔓 Jail-Free</button>
       </div>
+      <div class="cc-log" id="cc-log"></div>
       <div class="cc-title">🏦 بنك الحظ</div>
       <div class="deck-count" id="deck-count"></div>
     `;
@@ -2403,12 +2405,6 @@
     hazakPile.onclick = () => onDeckClick('hazak');
     board.appendChild(hazakPile);
     applyDeckTheme(hazakPile, 'deck-hazak');
-    // Move toast inside board and add relative positioning
-    const toast = document.getElementById('toast-container');
-    if (toast && toast.parentNode !== board) {
-      board.appendChild(toast);
-    }
-    board.style.position = 'relative';
     setTimeout(window.resizeBoard, 50);
   }
 
@@ -2423,6 +2419,14 @@
     const corners = getCornerLayout(count);
 
     let html = '';
+    const ownedByPlayer = {};
+    state.boardSquares?.forEach(sq => {
+      if (sq.type === 'property' && sq.owner) {
+        if (!ownedByPlayer[sq.owner]) ownedByPlayer[sq.owner] = [];
+        ownedByPlayer[sq.owner].push(sq);
+      }
+    });
+
     state.players.forEach((p, i) => {
       const cornerClass = corners[i % corners.length] || 'corner-tl';
       const isCurrent = i === state.currentPlayerIndex;
@@ -2434,11 +2438,18 @@
       const showMoney = state.gameMeta?.moneyVisible !== false || p.id === myPlayerId;
       const moneyDisplay = showMoney ? `$${p.money}` : '💰 ???';
       const clickable = !p.isBankrupt;
+      const props = ownedByPlayer[p.id] || [];
+      const propCards = props.map(sq => {
+        const bg = getColorGroupBG(sq.color_group) || '#607d8b';
+        const upg = sq.upgrade === 'garage' ? '🏗️' : sq.upgrade === 'rest_stop' ? '🏡' : sq.upgrade === 'market' ? '🏬' : '';
+        return `<span class="mini-card" style="background:${bg};color:#fff;" title="${sq.name}${upg ? ' ('+upg+')' : ''}">${sq.name.slice(0, 3)}${upg}</span>`;
+      }).join('');
       html += `
         <div class="player-corner ${cornerClass} ${isCurrent ? 'current-turn' : ''} ${p.isBankrupt ? 'bankrupt' : ''} ${p.connected === false ? 'disconnected' : ''}" data-player-id="${p.id}" style="${clickable ? 'cursor:pointer;' : ''}" ${clickable ? `onclick="onPlayerCardClick('${p.id}')"` : ''}>
           <div class="pc-header"><img src="${getPfpUrl(avatarNum)}" alt="" />${p.name}${p.connected === false ? ' 🔴' : ''}</div>
           <div class="pc-money">${moneyDisplay}</div>
           ${invItems.length > 0 ? `<div class="pc-inv" style="display:flex;gap:3px;flex-wrap:wrap;">${invItems.join('')}</div>` : ''}
+          ${propCards ? `<div class="pc-props">${propCards}</div>` : ''}
           ${status ? `<div class="pc-status">${status}</div>` : ''}
         </div>
       `;
@@ -2476,9 +2487,6 @@
     try {
     if (!gameState) { console.log('updateUI: no gameState'); return; }
     const state = gameState;
-
-    // Persist game state on every meaningful update
-    persistGameState();
 
     // Close all turn-limited modals when state changes
     ['buy-modal','upgrade-modal','card-draw-modal','inspect-modal','inventory-modal','trade-modal'].forEach(id => {
