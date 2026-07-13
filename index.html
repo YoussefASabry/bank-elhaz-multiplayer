@@ -110,7 +110,7 @@
     .lobby-players .lp-item .lp-host { font-size: 0.7rem; color: #8B6914; margin-left: auto; }
 
     /* ── Game layout - full viewport, board centered, players in corners ── */
-    #game-container { display: none; width: 100vw; height: 100vh; padding: 0; margin: 0; overflow: hidden; position: relative; background: var(--bg); }
+    #game-container { display: none; width: 100vw; height: 100vh; padding: 0; margin: 0; overflow: visible; position: relative; background: var(--bg); }
     .game-layout { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; position: relative; }
 
     /* Player corner panels */
@@ -492,13 +492,10 @@
     .player-card.current { border-color: #ffd700 !important; background: #f5e0b0 !important; box-shadow: 0 0 8px rgba(255,215,0,0.4); }
 
     @media (max-width: 1200px) {
-      #board { transform: scale(0.65); transform-origin: center center; }
-      .player-corner { transform: scale(0.9); }
       .player-corner.corner-lt, .player-corner.corner-lc, .player-corner.corner-lb { transform: translateY(-50%) scale(0.9); }
       .player-corner.corner-rt, .player-corner.corner-rc, .player-corner.corner-rb { transform: translateY(-50%) scale(0.9); }
     }
     @media (max-width: 800px) {
-      #board { transform: scale(0.5); transform-origin: center center; }
       .player-corner { padding: 6px 10px; min-width: 120px; font-size: 0.7rem; gap: 3px; }
       .player-corner .pc-header { font-size: 0.75rem; gap: 4px; }
       .player-corner .pc-header img { width: 22px; height: 22px; }
@@ -513,7 +510,7 @@
     @media (orientation: landscape) and (max-width: 1100px) {
       #game-container { overflow: hidden; }
       .game-layout { display: flex; flex-direction: row; align-items: stretch; justify-content: center; gap: 8px; }
-      #board { flex: 0 0 auto; transform-origin: left center; }
+      #board { flex: 0 0 auto; }
       #remote-control { display: none !important; }
       #player-corners { position: relative; top: auto; left: auto; width: auto; height: auto; display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 8px; pointer-events: auto; overflow-y: auto; }
       .player-corner { position: relative; top: auto !important; left: auto !important; right: auto !important; bottom: auto !important; transform: none !important; min-width: 120px; max-width: 180px; padding: 8px 12px; font-size: 0.75rem; gap: 4px; border-radius: 10px; }
@@ -615,9 +612,9 @@
 
     /* Awkward in-between: board left, portrait elements right */
     @media (min-width: 601px) and (max-width: 900px) {
-      #game-container { overflow: hidden; height: 100vh; }
+      #game-container { height: 100vh; }
       .game-layout { display: flex; flex-direction: row; align-items: stretch; justify-content: center; gap: 6px; padding: 0; }
-      #board { flex: 0 0 auto; transform-origin: left center; margin: 0; }
+      #board { flex: 0 0 auto; margin: 0; }
       #remote-control { display: block !important; flex-shrink: 0; width: auto; min-width: 200px; max-width: 320px; overflow-y: auto; }
       #rc-status { display: flex !important; }
       #rc-turn-banner, #rc-timer-bar { display: none !important; }
@@ -3903,41 +3900,44 @@
     const vw = window.innerWidth, vh = window.innerHeight;
     if (vw === 0) return;
     board.style.transform = '';
-    board.style.marginBottom = '';
+    board.style.margin = '';
+    board.style.top = '';
+    board.style.left = '';
 
-    if (window.matchMedia('(orientation: portrait) and (max-width: 600px)').matches) {
-      const pad = 4;
-      const maxW = vw - pad * 2;
-      const maxH = vh * 0.62;
-      let s = Math.min(maxW / BOARD_W, maxH / BOARD_H, 0.8);
-      s = Math.max(s, 0.28);
-      board.style.transform = `scale(${s})`;
-      board.style.transformOrigin = 'top center';
-      board.style.marginTop = `32px`;
-      board.style.marginBottom = `${s * BOARD_H - BOARD_H}px`;
-      board.style.marginLeft = '';
-      board.style.marginRight = '';
-    } else if (window.matchMedia('(min-width: 601px) and (max-width: 900px)').matches) {
-      const sidePanelW = Math.min(240, vw * 0.35);
-      const pad = 6;
-      const maxW = vw - sidePanelW - pad * 2;
-      const maxH = vh - pad * 2;
-      let s = Math.min(maxW / BOARD_W, maxH / BOARD_H, 0.6);
-      s = Math.max(s, 0.25);
-      board.style.transform = `scale(${s})`;
-      board.style.transformOrigin = 'left center';
-      board.style.marginBottom = `${s * BOARD_H - BOARD_H}px`;
-    } else if (window.matchMedia('(orientation: landscape) and (max-width: 1100px)').matches) {
-      const sidePanelW = Math.min(200, vw * 0.3);
-      const pad = 10;
-      const maxW = vw - sidePanelW - pad * 2;
-      const maxH = vh - pad * 2;
-      let s = Math.min(maxW / BOARD_W, maxH / BOARD_H, 0.7);
-      s = Math.max(s, 0.2);
-      board.style.transform = `scale(${s})`;
-      board.style.transformOrigin = 'left center';
-      board.style.marginBottom = `${s * BOARD_H - BOARD_H}px`;
+    const isPortrait = window.matchMedia('(orientation: portrait)').matches || vw < vh;
+    const isLandscapeMobile = !isPortrait && vw <= 1100;
+    const isInBetween = !isPortrait && vw >= 601 && vw <= 900;
+    const isDesktop = !isPortrait && vw > 1100;
+
+    let availW, availH, originX = 'left', originY = 'top';
+    let marginLeft = 0, marginTop = 0;
+
+    if (isPortrait) {
+      availW = vw - 8;
+      availH = vh * 0.58;
+      marginTop = 24;
+    } else if (isLandscapeMobile || isInBetween) {
+      const sideW = Math.min(240, vw * 0.32);
+      availW = vw - sideW - 12;
+      availH = vh - 8;
+      marginLeft = 6;
+      marginTop = 4;
+    } else {
+      availW = vw - 60;
+      availH = vh - 60;
     }
+
+    let s = Math.min(availW / BOARD_W, availH / BOARD_H, 1);
+    s = Math.max(s, 0.2);
+    board.style.transform = `scale(${s})`;
+    board.style.transformOrigin = `${originX} ${originY}`;
+    board.style.marginLeft = marginLeft + 'px';
+    board.style.marginTop = marginTop + 'px';
+    // Negative margin to collapse the layout box to match visual size
+    const extraW = BOARD_W * (1 - s);
+    const extraH = BOARD_H * (1 - s);
+    board.style.marginRight = -extraW + 'px';
+    board.style.marginBottom = -extraH + 'px';
   };
 
   window.addEventListener('resize', window.resizeBoard);
