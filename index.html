@@ -111,7 +111,7 @@
 
     /* ── Game layout - full viewport, board centered, players in corners ── */
     #game-container { display: none; width: 100vw; height: 100vh; padding: 0; margin: 0; overflow: visible; position: relative; background: var(--bg); }
-    .game-layout { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; position: relative; }
+    .game-layout { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; position: relative; padding: 0 100px; }
 
     /* Player corner panels */
     #player-corners {
@@ -144,7 +144,7 @@
     .player-corner .pc-money.flash-loss { color: #fff; background: rgba(244,67,54,0.6); }
     .player-corner .pc-props { display: flex; flex-wrap: wrap; gap: 2px; max-height: 48px; overflow-y: auto; }
     .player-corner .pc-status { font-size: 0.7rem; color: #c0392b; font-weight: bold; }
-    .player-corner .mini-inv-badge { font-size:0.6rem; padding:1px 4px; border-radius:4px; font-weight:bold; }
+    .player-corner .mini-inv-badge { font-size:0.7rem; padding:2px 6px; border-radius:4px; font-weight:bold; }
     .player-corner .pc-props .mini-card { display:inline-flex; flex-direction:column; align-items:center; gap:1px; padding:1px 3px; min-width:32px; border-radius:3px; font-size:0.5rem; line-height:1.1; text-align:center; border:1px solid rgba(0,0,0,0.15); }
 
     /* Player action popup */
@@ -152,18 +152,18 @@
     #player-action-content .popup-header img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #c4a96a; }
     #player-action-content .popup-actions { display: flex; flex-direction: column; gap: 8px; }
     #player-action-content .popup-actions .btn { font-size: 0.9rem; padding: 10px 20px; }
-    .player-corner.corner-tl { top: 100px; left: 16px; }
-    .player-corner.corner-tr { top: 100px; right: 16px; }
-    .player-corner.corner-bl { bottom: 16px; left: 16px; }
-    .player-corner.corner-br { bottom: 16px; right: 16px; }
+    .player-corner.corner-tl { top: 100px; left: 80px; }
+    .player-corner.corner-tr { top: 100px; right: 80px; }
+    .player-corner.corner-bl { bottom: 16px; left: 80px; }
+    .player-corner.corner-br { bottom: 16px; right: 80px; }
     .player-corner.corner-tc { top: 100px; left: 50%; transform: translateX(-50%); }
     .player-corner.corner-bc { bottom: 16px; left: 50%; transform: translateX(-50%); }
-    .player-corner.corner-lt { top: 33%; left: 24px; transform: translateY(-50%); }
-    .player-corner.corner-lc { top: 50%; left: 24px; transform: translateY(-50%); }
-    .player-corner.corner-lb { top: 67%; left: 24px; transform: translateY(-50%); }
-    .player-corner.corner-rt { top: 33%; right: 24px; transform: translateY(-50%); }
-    .player-corner.corner-rc { top: 50%; right: 24px; transform: translateY(-50%); }
-    .player-corner.corner-rb { top: 67%; right: 24px; transform: translateY(-50%); }
+    .player-corner.corner-lt { top: 33%; left: 60px; transform: translateY(-50%); }
+    .player-corner.corner-lc { top: 50%; left: 60px; transform: translateY(-50%); }
+    .player-corner.corner-lb { top: 67%; left: 60px; transform: translateY(-50%); }
+    .player-corner.corner-rt { top: 33%; right: 60px; transform: translateY(-50%); }
+    .player-corner.corner-rc { top: 50%; right: 60px; transform: translateY(-50%); }
+    .player-corner.corner-rb { top: 67%; right: 60px; transform: translateY(-50%); }
 
 
 
@@ -282,7 +282,7 @@
     @keyframes pfpAppear { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
     .center-cell .center-dice { display: flex; gap: 6px; justify-content: center; }
     .center-cell .center-dice .die { width: 64px; height: 64px; background: #fff; color: #3a2a1a; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.9rem; font-weight: bold; box-shadow: 0 3px 10px rgba(0,0,0,0.2); border: 2px solid #c4a96a; }
-    .center-cell .center-dice .die.rolling { animation: diceShake 0.3s ease-in-out; }
+    .center-cell .center-dice .die.rolling { animation: diceShake 0.15s ease-in-out infinite; }
     @keyframes diceShake { 0%,100% { transform: rotate(0deg); } 25% { transform: rotate(-15deg) scale(1.1); } 75% { transform: rotate(15deg) scale(1.1); } }
     .center-cell .cc-timer { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.85rem; font-family: monospace; color: #2a4a7a; background: rgba(255,255,255,0.6); padding: 4px 14px; border-radius: 8px; width: fit-content; margin: 0 auto; border: 1px solid #8B6914; }
     .center-cell .cc-timer .timer-fill { width: 60px; height: 10px; background: #e0d5c0; border-radius: 5px; overflow: hidden; border: 1px solid #c4a96a; }
@@ -290,22 +290,19 @@
     .center-cell .cc-timer.timer-danger .timer-fill-inner { background: #c0392b; }
     .center-cell .cc-timer.timer-warn .timer-fill-inner { background: #e67e22; }
     .center-cell .cc-actions { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
-    .center-cell .cc-actions .btn { padding: 10px 24px; font-size: 1.1rem; }
+    .center-cell .cc-actions .btn { padding: 14px 32px; font-size: 1.25rem; }
     .center-cell .cc-prison { display: none; gap: 4px; align-items: center; justify-content: center; }
     .center-cell .cc-prison.show { display: flex; }
     .center-cell .cc-prison span { font-size: 0.75rem; color: #ff9800; font-weight: bold; }
     .center-cell .cc-prison .btn { padding: 4px 10px; font-size: 0.75rem; }
     .center-cell .cc-title { font-size: 0.8rem; color: #5a3a0a; font-weight: bold; }
-    .center-cell .cc-log { font-size: 0.6rem; color: #5a3a0a; width: 100%; max-height: 44px; overflow-y: auto; text-align: center; line-height: 1.35; flex-shrink: 0; scrollbar-width: thin; }
-    .center-cell .cc-log::-webkit-scrollbar { width: 3px; }
-    .center-cell .cc-log::-webkit-scrollbar-thumb { background: #c4a96a; border-radius: 2px; }
     .center-cell .turn-banner { font-size: 1.1rem; color: #fff; font-weight: 800; text-shadow: 0 2px 8px rgba(0,0,0,0.5), 0 0 20px rgba(255,255,255,0.15); padding: 2px 0; letter-spacing: 0.5px; }
     .moving-car { position: fixed; z-index: 50; pointer-events: none; font-size: 2.4rem; display: none; filter: drop-shadow(0 3px 8px rgba(0,0,0,0.5)); transition: none; }
     .moving-car img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid #ffd700; }
 
     /* Side panel */
 
-    .btn { padding: 12px 28px; border-radius: 12px; border: none; font-size: 1.05rem; cursor: pointer; font-weight: bold; transition: transform 0.12s, opacity 0.12s; }
+    .btn { padding: 14px 32px; border-radius: 12px; border: none; font-size: 1.15rem; cursor: pointer; font-weight: bold; transition: transform 0.12s, opacity 0.12s; }
     .btn:hover { transform: scale(1.05); }
     .btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; }
     .btn-primary { background: linear-gradient(135deg, #c49a3c, #a07828); color: #fff; }
@@ -323,8 +320,8 @@
     /* Remote control for mobile */
     #remote-control { width: 100%; max-width: 500px; margin: 8px auto; padding: 10px 12px; }
     #remote-control .rc-row { display: flex; gap: 8px; justify-content: center; margin-bottom: 6px; }
-    #remote-control .rc-row .btn { flex: 1; padding: 14px 8px; font-size: 1.1rem; border-radius: 12px; }
-    #remote-control .rc-row.rc-secondary .btn { font-size: 0.9rem; padding: 12px 6px; }
+    #remote-control .rc-row .btn { flex: 1; padding: 16px 10px; font-size: 1.2rem; border-radius: 12px; }
+    #remote-control .rc-row.rc-secondary .btn { font-size: 1rem; padding: 14px 8px; }
     #remote-control .rc-prison { display: flex; gap: 6px; align-items: center; justify-content: center; flex-wrap: wrap; }
     #remote-control .rc-prison span { font-size: 0.8rem; color: #ff9800; font-weight: bold; }
     #remote-control .rc-prison .btn { padding: 10px 16px; font-size: 0.85rem; flex: 1; min-width: 0; }
@@ -336,7 +333,7 @@
     .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: center; }
     #inspect-modal { z-index: 120; }
     .modal-overlay.show { display: flex; }
-    .modal-overlay-transparent { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; justify-content: center; align-items: center; pointer-events: none; }
+    .modal-overlay-transparent { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; justify-content: center; align-items: center; pointer-events: none; }
     .modal-overlay-transparent.show { display: flex; }
     .modal-overlay-transparent .modal-box { pointer-events: all; }
     .modal-box { background: #f5e6c8; border: 3px solid #8B6914; border-radius: 16px; padding: 20px; max-width: 460px; width: 92%; max-height: 85vh; overflow-y: auto; box-shadow: 0 4px 24px rgba(0,0,0,0.2); color: #3a2a1a; }
@@ -510,33 +507,32 @@
     /* Mobile/tablet landscape: side panel layout */
     @media (orientation: landscape) and (max-width: 1100px) {
       #game-container { overflow: hidden; }
-      .game-layout { display: flex; flex-direction: row; align-items: stretch; justify-content: center; gap: 8px; }
+      .game-layout { display: flex; flex-direction: row; align-items: stretch; justify-content: center; gap: 8px; padding-left: 0; padding-right: 0; }
       #board { flex: 0 0 auto; }
       #remote-control { display: none !important; }
       #player-corners { position: relative; top: auto; left: auto; width: auto; height: auto; display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 8px; pointer-events: auto; overflow-y: auto; }
-      .player-corner { position: relative; top: auto !important; left: auto !important; right: auto !important; bottom: auto !important; transform: none !important; min-width: 120px; max-width: 180px; padding: 8px 12px; font-size: 0.75rem; gap: 4px; border-radius: 10px; }
-      .player-corner .pc-header { font-size: 0.8rem; gap: 4px; }
-      .player-corner .pc-header img { width: 26px; height: 26px; }
-      .player-corner .pc-money { font-size: 0.85rem; padding: 2px 6px; }
-      .player-corner .pc-status { font-size: 0.65rem; }
-      .player-corner .mini-inv-badge { font-size: 0.6rem; padding: 2px 5px; }
-      .center-cell { padding: 10px 6px 4px; }
-      .center-cell .center-pfp { width: 72px; height: 72px; }
-      .center-cell .center-dice .die { width: 72px; height: 72px; font-size: 2.6rem; }
-      .center-cell .cc-actions .btn { padding: 12px 28px; font-size: 1.3rem; }
-      .center-cell .cc-timer { font-size: 1.2rem; padding: 4px 12px; }
-      .center-cell .cc-timer .timer-fill { width: 72px; height: 10px; }
-      .center-cell .turn-banner { font-size: 1.4rem; }
-      .btn { padding: 10px 20px; font-size: 0.95rem; }
-      .cell { font-size: 0.65rem; }
-      .cell .cell-city { font-size: 0.6rem; padding: 6px 4px; }
-      .cell .cell-price-section { font-size: 0.55rem; padding: 3px 4px; }
-      .cell .players-here .ptoken { width: 18px; height: 18px; }
-      .deck-pile .card-back { font-size: 2.4rem; }
-      #build-mgmt { max-height: 80px; font-size: 0.6rem; }
-      .modal-box { max-width: 320px; padding: 12px; }
-      #toast-container { max-height: 36px; }
-      .toast { font-size: 0.5rem; padding: 2px 5px; }
+      .player-corner { position: relative; top: auto !important; left: auto !important; right: auto !important; bottom: auto !important; transform: none !important; min-width: 140px; max-width: 200px; padding: 10px 14px; font-size: 0.85rem; gap: 6px; border-radius: 12px; }
+      .player-corner .pc-header { font-size: 0.9rem; gap: 6px; }
+      .player-corner .pc-header img { width: 30px; height: 30px; }
+      .player-corner .pc-money { font-size: 0.95rem; padding: 3px 8px; }
+      .player-corner .pc-status { font-size: 0.75rem; }
+      .player-corner .mini-inv-badge { font-size: 0.7rem; padding: 3px 6px; }
+      .center-cell { padding: 12px 8px 6px; }
+      .center-cell .center-pfp { width: 80px; height: 80px; }
+      .center-cell .center-dice .die { width: 80px; height: 80px; font-size: 2.8rem; }
+      .center-cell .cc-actions .btn { padding: 14px 32px; font-size: 1.4rem; }
+      .center-cell .cc-timer { font-size: 1.3rem; padding: 6px 14px; }
+      .center-cell .cc-timer .timer-fill { width: 80px; height: 12px; }
+      .center-cell .turn-banner { font-size: 1.5rem; }
+      .cell { font-size: 0.75rem; }
+      .cell .cell-city { font-size: 0.7rem; padding: 8px 6px; }
+      .cell .cell-price-section { font-size: 0.65rem; padding: 4px 6px; }
+      .cell .players-here .ptoken { width: 22px; height: 22px; }
+      .deck-pile .card-back { font-size: 2.6rem; }
+      #build-mgmt { max-height: 80px; font-size: 0.7rem; }
+      .modal-box { max-width: 360px; padding: 14px; }
+      .center-cell #toast-container { max-height: 36px; }
+      .toast { font-size: 0.55rem; padding: 3px 6px; }
     }
     @media (orientation: landscape) and (max-height: 450px) {
       .player-corner { min-width: 80px; max-width: 120px; font-size: 0.5rem; padding: 3px 6px; gap: 2px; }
@@ -557,22 +553,22 @@
 
     /* Extra small portrait for tiny phones */
     @media (orientation: portrait) and (max-width: 420px) {
-      #remote-control .rc-row .btn { padding: 12px 6px; font-size: 0.95rem; }
-      #remote-control .rc-row.rc-secondary .btn { font-size: 0.8rem; padding: 10px 4px; }
+      #remote-control .rc-row .btn { padding: 14px 8px; font-size: 1rem; }
+      #remote-control .rc-row.rc-secondary .btn { font-size: 0.85rem; padding: 12px 6px; }
     }
 
     /* Mobile portrait: board at top, remote control below, player cards at bottom */
     @media (orientation: portrait) and (max-width: 600px) {
       #game-container { overflow-y: auto; overflow-x: hidden; height: auto; min-height: 100vh; }
-      .game-layout { display: flex; flex-direction: column; align-items: center; overflow-y: visible; padding-top: 0; height: auto; }
-      #board { position: relative; top: auto; left: auto; transform-origin: top center; margin: 0; z-index: 1; flex-shrink: 0; }
+      .game-layout { display: flex; flex-direction: column; align-items: center; overflow-y: visible; padding-top: 0; padding-left: 0; padding-right: 0; height: auto; }
+      #board { position: relative; top: auto; left: auto; transform-origin: top center; margin: 60px auto 0; z-index: 1; flex-shrink: 0; }
       #remote-control { display: block !important; flex-shrink: 0; width: 100%; max-width: 400px; }
       #rc-status { display: flex !important; }
       .center-cell #center-dice-area { display: none !important; }
       #rc-turn-banner, #rc-timer-bar { display: none !important; }
       #rc-dice-area { margin: 4px 0; display: flex; gap: 6px; justify-content: center; align-items: center; flex-wrap: wrap; }
-      #rc-dice-area .die { width: 60px !important; height: 60px !important; font-size: 2rem !important; }
-      #rc-dice-area .die.rolling { animation: diceShake 0.3s ease-in-out; }
+      #rc-dice-area .die { width: 70px !important; height: 70px !important; font-size: 2.3rem !important; }
+      #rc-dice-area .die.rolling { animation: diceShake 0.15s ease-in-out infinite; }
       #player-corners { flex-shrink: 0; position: relative; width: 100%; height: auto; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; padding: 6px 4px; top: auto; left: auto; pointer-events: auto; }
       .player-corner { position: relative; top: auto !important; left: auto !important; right: auto !important; bottom: auto !important; transform: none !important; min-width: 0; max-width: none; width: calc(50% - 6px); padding: 5px 8px; font-size: 0.65rem; gap: 3px; border-radius: 8px; }
       .player-corner .pc-header { font-size: 0.7rem; gap: 3px; }
@@ -585,13 +581,13 @@
       .center-cell .turn-banner { font-size: 1.6rem; font-weight: 900; }
       .center-cell .cc-timer { font-size: 1.4rem; padding: 6px 12px; }
       .center-cell .cc-timer .timer-fill { width: 100px; height: 12px; }
-      .center-cell .center-dice .die { width: 85px; height: 85px; font-size: 2.8rem; }
+      .center-cell .center-dice .die { width: 95px; height: 95px; font-size: 3.2rem; }
       .center-cell .cc-actions { display: none !important; }
       .center-cell .cc-prison { display: none !important; }
-      .cell { font-size: 1rem; font-weight: 700; }
-      .cell .cell-city { font-size: 0.85rem; font-weight: 700; }
-      .cell .cell-price-section { font-size: 0.8rem; font-weight: 700; }
-      .cell .players-here .ptoken { width: 28px; height: 28px; }
+      .cell { font-size: 1.1rem; font-weight: 700; }
+      .cell .cell-city { font-size: 0.9rem; font-weight: 700; }
+      .cell .cell-price-section { font-size: 0.85rem; font-weight: 700; }
+      .cell .players-here .ptoken { width: 30px; height: 30px; }
       .cell .players-here .ptoken.moving { width: 36px; height: 36px; }
       .cell.deck_trigger .deck-label, .cell.dual_deck_trigger .deck-label { font-size: 1.8rem; line-height: 1.2; }
       .cell.deck_trigger .deck-label img, .cell.dual_deck_trigger .deck-label img { width: 24px !important; height: 24px !important; }
@@ -603,26 +599,25 @@
       .modal-box h2 { font-size: 1rem; }
       .modal-box p { font-size: 0.85rem; }
       .modal-box .btn { padding: 7px 16px; font-size: 0.8rem; }
-      #toast-container { position: fixed !important; bottom: 8px !important; left: 8px !important; right: 8px !important; top: auto !important; max-height: 60px; z-index: 200; }
-      .toast { font-size: 0.8rem; padding: 4px 10px; }
+      .toast { font-size: 0.9rem; padding: 4px 12px; }
       .trade-panels { flex-direction: column; }
       .trade-panel { min-height: 120px; }
       #btn-players-float { top: 4px; right: 4px; padding: 5px 10px; font-size: 0.75rem; }
-      .moving-car { display: none !important; }
+      .moving-car { display: block !important; }
     }
 
-    /* Awkward in-between: use portrait mobile layout */
+      /* Awkward in-between: use portrait mobile layout */
     @media (min-width: 601px) and (max-width: 900px) {
       #game-container { overflow-y: auto; overflow-x: hidden; height: auto; min-height: 100vh; }
-      .game-layout { display: flex; flex-direction: column; align-items: center; overflow-y: visible; padding-top: 0; height: auto; }
-      #board { position: relative; top: auto; left: auto; transform-origin: top center; margin: 0; z-index: 1; flex-shrink: 0; }
+      .game-layout { display: flex; flex-direction: column; align-items: center; overflow-y: visible; padding-top: 0; padding-left: 0; padding-right: 0; height: auto; }
+      #board { position: relative; top: auto; left: auto; transform-origin: top center; margin: 60px auto 0; z-index: 1; flex-shrink: 0; }
       #remote-control { display: block !important; flex-shrink: 0; width: 100%; max-width: 400px; }
       #rc-status { display: flex !important; }
       .center-cell #center-dice-area { display: none !important; }
       #rc-turn-banner, #rc-timer-bar { display: none !important; }
       #rc-dice-area { margin: 4px 0; display: flex; gap: 6px; justify-content: center; align-items: center; flex-wrap: wrap; }
-      #rc-dice-area .die { width: 60px !important; height: 60px !important; font-size: 2rem !important; }
-      #rc-dice-area .die.rolling { animation: diceShake 0.3s ease-in-out; }
+      #rc-dice-area .die { width: 70px !important; height: 70px !important; font-size: 2.3rem !important; }
+      #rc-dice-area .die.rolling { animation: diceShake 0.15s ease-in-out infinite; }
       #player-corners { flex-shrink: 0; position: relative; width: 100%; height: auto; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; padding: 6px 4px; top: auto; left: auto; pointer-events: auto; }
       .player-corner { position: relative; top: auto !important; left: auto !important; right: auto !important; bottom: auto !important; transform: none !important; min-width: 0; max-width: none; width: calc(50% - 6px); padding: 5px 8px; font-size: 0.65rem; gap: 3px; border-radius: 8px; }
       .player-corner .pc-header { font-size: 0.7rem; gap: 3px; }
@@ -635,13 +630,13 @@
       .center-cell .turn-banner { font-size: 1.6rem; font-weight: 900; }
       .center-cell .cc-timer { font-size: 1.4rem; padding: 6px 12px; }
       .center-cell .cc-timer .timer-fill { width: 100px; height: 12px; }
-      .center-cell .center-dice .die { width: 85px; height: 85px; font-size: 2.8rem; }
+      .center-cell .center-dice .die { width: 95px; height: 95px; font-size: 3.2rem; }
       .center-cell .cc-actions { display: none !important; }
       .center-cell .cc-prison { display: none !important; }
-      .cell { font-size: 1rem; font-weight: 700; }
-      .cell .cell-city { font-size: 0.85rem; font-weight: 700; }
-      .cell .cell-price-section { font-size: 0.8rem; font-weight: 700; }
-      .cell .players-here .ptoken { width: 28px; height: 28px; }
+      .cell { font-size: 1.1rem; font-weight: 700; }
+      .cell .cell-city { font-size: 0.9rem; font-weight: 700; }
+      .cell .cell-price-section { font-size: 0.85rem; font-weight: 700; }
+      .cell .players-here .ptoken { width: 30px; height: 30px; }
       .cell .players-here .ptoken.moving { width: 36px; height: 36px; }
       .cell.deck_trigger .deck-label, .cell.dual_deck_trigger .deck-label { font-size: 1.8rem; line-height: 1.2; }
       .cell.deck_trigger .deck-label img, .cell.dual_deck_trigger .deck-label img { width: 24px !important; height: 24px !important; }
@@ -650,9 +645,8 @@
       .deck-pile .card-back { font-size: 1.6rem; }
       #build-mgmt { max-height: 80px; font-size: 0.6rem; position: relative; width: 100%; }
       .modal-box { max-width: 320px; padding: 12px; }
-      #toast-container { position: fixed !important; bottom: 8px !important; left: 8px !important; right: 8px !important; top: auto !important; max-height: 60px; z-index: 200; }
-      .toast { font-size: 0.8rem; padding: 4px 10px; }
-      .moving-car { display: none !important; }
+      .toast { font-size: 0.9rem; padding: 4px 12px; }
+      .moving-car { display: block !important; }
     }
 
     /* ════════════════════════════════════════
@@ -778,24 +772,23 @@
 
 
     /* ── Toast ── */
-    #toast-container {
-      position: absolute; bottom: 6px; left: 20%; right: 20%;
-      z-index: 100; display: flex; flex-direction: column; gap: 2px;
-      max-height: 52px; overflow-y: auto;
+    .center-cell #toast-container {
+      width: 100%; flex: 1; min-height: 50px; max-height: 100px;
+      overflow-y: auto; display: flex; flex-direction: column;
+      align-items: center; gap: 1px; padding: 2px 6px;
+      margin: 2px auto;
+      background: rgba(245,230,200,0.25);
+      border-radius: 6px;
       scrollbar-width: thin;
-      pointer-events: none;
-      max-width: 300px;
-      margin: 0 auto;
+      pointer-events: auto;
     }
     .toast {
-      background: linear-gradient(135deg, rgba(90,58,26,0.3), rgba(122,90,42,0.3));
-      color: #3a2a1a; padding: 2px 6px;
+      background: rgba(90,58,26,0.15);
+      color: #3a2a1a; padding: 1px 8px;
       border-radius: 3px; font-size: 0.6rem; font-weight: bold;
+      width: 100%; text-align: center; line-height: 1.35;
       opacity: 0; transform: translateY(6px) scale(0.95);
       animation: toastIn 0.3s ease forwards;
-      text-align: center;
-      position: relative;
-      backdrop-filter: blur(2px);
     }
     .toast.card-toast {
       background: linear-gradient(135deg, rgba(26,42,90,0.3), rgba(42,58,122,0.3));
@@ -811,7 +804,7 @@
     .card-fly.hazak-fly { background: linear-gradient(135deg, #e8d8a8, #c8b878); border: 2px solid #b8962e; }
 
     /* Player selector popup (for selecting trade target) */
-    #player-selector { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 110; display: none; justify-content: center; align-items: center; background: rgba(0,0,0,0.4); }
+    #player-selector { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 500; display: none; justify-content: center; align-items: center; background: rgba(0,0,0,0.4); }
     #player-selector.show { display: flex; }
     #player-selector .ps-box { background: #f5e6c8; border: 3px solid #8B6914; border-radius: 16px; padding: 20px; max-width: 360px; width: 90%; }
     #player-selector .ps-box h3 { color: #5a3a0a; font-size: 1rem; margin-bottom: 12px; text-align: center; }
@@ -923,7 +916,10 @@
 <div id="game-container">
   <div class="game-layout">
 
-    <div id="room-code-badge" style="position:fixed;top:12px;left:12px;z-index:50;padding:4px 10px;border-radius:6px;border:1px solid #c4a96a;background:rgba(245,230,200,0.85);color:#5a3a0a;font-size:0.75rem;font-weight:bold;letter-spacing:1px;display:none;"></div>
+    <div style="position:fixed;top:12px;left:12px;z-index:50;display:flex;gap:6px;align-items:center;">
+      <div id="room-code-badge" style="padding:4px 10px;border-radius:6px;border:1px solid #c4a96a;background:rgba(245,230,200,0.85);color:#5a3a0a;font-size:0.75rem;font-weight:bold;letter-spacing:1px;display:none;"></div>
+      <button id="btn-leave" onclick="leaveGame()" style="display:none;padding:4px 10px;border-radius:6px;border:1px solid #c0392b;background:rgba(192,57,43,0.15);color:#c0392b;font-size:0.7rem;font-weight:bold;cursor:pointer;">🚪 Leave</button>
+    </div>
     <button id="btn-players-float" onclick="openPlayerList()" style="position:fixed;top:12px;right:12px;z-index:50;padding:6px 14px;border-radius:8px;border:none;background:rgba(90,58,26,0.8);color:#ffd700;font-size:0.85rem;cursor:pointer;">👥 Players</button>    <div id="board"></div>
 
     <div id="remote-control" style="display:none;">
@@ -958,7 +954,6 @@
 
     <div id="build-mgmt"></div>
   </div>
-  <div id="toast-container"></div>
 </div>
 
 <div id="big-text-overlay"></div>
@@ -1175,6 +1170,7 @@
     try {
       const { roomCode: rc, playerName: pn } = JSON.parse(saved);
       if (rc && pn) {
+        if (!confirm(`Rejoin "${rc}" as ${pn}?`)) return;
         showToast('🔄 Attempting to rejoin room "' + rc + '" as ' + pn + '...');
         socket.emit('rejoin_game', { roomCode: rc, playerName: pn });
       }
@@ -1263,12 +1259,15 @@
   // ── Save/restore game state ──
   function updateRoomCodeBadge() {
     const badge = document.getElementById('room-code-badge');
-    if (!badge) return;
+    const leaveBtn = document.getElementById('btn-leave');
+    if (!badge || !leaveBtn) return;
     if (roomCode && document.getElementById('game-container')?.style.display === 'block') {
       badge.textContent = '🏠 ' + roomCode;
       badge.style.display = 'inline-block';
+      leaveBtn.style.display = 'inline-block';
     } else {
       badge.style.display = 'none';
+      leaveBtn.style.display = 'none';
     }
   }
   function persistGameState() {
@@ -1506,6 +1505,14 @@
     resetToLobby();
   };
 
+  window.leaveGame = () => {
+    if (!confirm('Leave the current game? You can rejoin later with the room code.')) return;
+    socket.emit('leave_room', { roomCode });
+    document.getElementById('game-container').style.display = 'none';
+    document.getElementById('lobby-screen').style.display = 'block';
+    resetToLobby();
+  };
+
   function resetToLobby() {
     roomCode = null;
     myPlayerId = null;
@@ -1690,7 +1697,7 @@
     if (d2) d2.classList.add('rolling');
 
     let ticks = 0;
-    const totalTicks = 22;
+    const totalTicks = 6;
     function diceTick() {
       const face1 = DICE_FACES[Math.floor(Math.random() * 6) + 1];
       const face2 = DICE_FACES[Math.floor(Math.random() * 6) + 1];
@@ -1704,10 +1711,10 @@
         const f2 = DICE_FACES[roll.die2] || '?';
         if (d1) d1.textContent = f1;
         if (d2) d2.textContent = f2;
-        setTimeout(() => showBigText(`${roll.die1 + roll.die2}`, true, ''), 500);
-        setTimeout(() => animateToken(roll, roll.playerId === myPlayerId), 800);
+        setTimeout(() => showBigText(`${roll.die1 + roll.die2}`, true, ''), 200);
+        setTimeout(() => animateToken(roll, roll.playerId === myPlayerId), 350);
       } else {
-        setTimeout(diceTick, ticks < 8 ? 100 : ticks < 14 ? 160 : ticks < 18 ? 220 : 280);
+        setTimeout(diceTick, 70);
       }
     }
     diceTick();
@@ -1737,14 +1744,6 @@
   socket.on('action_log', (data) => {
     log(data.message);
     showToast(data.message);
-    const panel = document.getElementById('cc-log');
-    if (panel) {
-      const entry = document.createElement('div');
-      entry.textContent = data.message;
-      panel.appendChild(entry);
-      panel.scrollTop = panel.scrollHeight;
-      while (panel.children.length > 12) panel.removeChild(panel.firstChild);
-    }
   });
 
   socket.on('landed_on_deck', (data) => {
@@ -2370,7 +2369,7 @@
         <button class="btn btn-bail" onclick="payBail()">💰 Bail ($50)</button>
         <button class="btn btn-jailfree" id="btn-use-jailfree" onclick="useJailFree()" style="display:none">🔓 Jail-Free</button>
       </div>
-      <div class="cc-log" id="cc-log"></div>
+      <div id="toast-container"></div>
       <div class="cc-title">🏦 بنك الحظ</div>
       <div class="deck-count" id="deck-count"></div>
     `;
