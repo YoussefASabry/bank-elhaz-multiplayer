@@ -2477,6 +2477,9 @@
     if (!gameState) { console.log('updateUI: no gameState'); return; }
     const state = gameState;
 
+    // Persist game state on every meaningful update
+    persistGameState();
+
     // Close all turn-limited modals when state changes
     ['buy-modal','upgrade-modal','card-draw-modal','inspect-modal','inventory-modal','trade-modal'].forEach(id => {
       document.getElementById(id)?.classList.remove('show');
