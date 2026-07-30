@@ -243,6 +243,38 @@ bid boxes).
 - `vitest` transpiles **without** typechecking, so a green test run does not mean
   it compiles. Always run both.
 
+### ⚠ `applyAction` MUST mutate state in place — do not go immutable
+
+`trade.ts:86` keys its rate limiter on **`GameState` object identity**:
+
+```ts
+const tradeOpenLog = new WeakMap<GameState, Map<SeatId, number[]>>();
+```
+
+That was the right call — a bare module-level `Map<SeatId, …>` would leak counters
+across concurrent rooms and across every test reusing a seat id like `'seat-a'`.
+But it couples the limiter to the current in-place mutation style. **If the reducer
+is written to return a fresh state object per action, the trade rate limit
+silently resets to zero on every call** and B16 regresses with no test failure and
+no type error. The tests won't catch it because they hold one state object
+throughout.
+
+If you do want an immutable reducer, move the counter into `GameState` itself
+first, then convert. Don't convert and hope.
+
+### `CHOOSE_CARD_OPTION.index` is an index into a FLATTENED list
+
+`resolveChoice` in `cards.ts` does **not** index `card.choices` directly.
+Non-pool choices (`receive_cash`, `pay_fine`, `go_to_prison`) are one entry each,
+but a `claim_free_property` or `move_to_dynamic_pool` choice **expands to one entry
+per resolved `propertyPool` city**. So a card offering "cash or a free city" with 4
+eligible cities presents 5 options, not 2.
+
+The reducer and the client must both compute the index against that expansion.
+No card in this dataset has more than one pool-bearing choice, so the flattening is
+unambiguous — but it is an easy off-by-N and it would manifest as "the player
+picked Cairo and got Aswan", which no type checker will catch.
+
 ---
 
 ## 7. Known debt
@@ -257,6 +289,36 @@ bid boxes).
   reducer (#9) should encapsulate it.
 - No commits existed until this one, so there are no intermediate rollback points
   for phases 0–3.
+- **`trade.ts` and `bid.ts` have different `Result` shapes.** `trade.ts` returns
+  `{ ok, events, value }`; `bid.ts` returns `{ ok, value }` and leaves event
+  construction to the caller. Deliberate — `cancelTrade` takes a caller-supplied
+  reason string that has nowhere to live but its event. The reducer can forward
+  `.events` or build its own; both work, but pick one convention and note it.
+- **Self-trade is rejected with `not_the_entitled_player`** (`trade.ts:134`) because
+  no dedicated reason exists. Add `cannot_trade_with_self` if the client needs to
+  distinguish it.
+- **`setupChoices()` returns `remainingDraws: []` as a placeholder.** It has no
+  knowledge of the originating `blind_card`'s queue, so the caller must copy the
+  real queue across when installing the `card_choice` pending. Fragile; the reducer
+  should encapsulate it so no future caller has to remember.
+
+### Unverified risk: CSS cascade after the extraction
+
+All seven `@media` blocks were moved into `responsive.css`, which loads **last**.
+In the original single stylesheet some of those media blocks sat physically
+*before* later non-media rules (the trade and card-redesign sections). Where an
+earlier media rule and a later non-media rule set the **same property** on the
+**same selector** at **equal specificity**, moving the media queries to the end can
+flip which one wins.
+
+What was verified: content parity (sorted, normalised line-multiset diff between
+the original 809-line block and the concatenation of the 5 files — zero
+differences, 722 lines each side; brace count 514 vs 514), and no exact
+selector+property collisions between the media blocks and the other files.
+
+What was **not** verified: a live pixel-diff of the rendered page before vs after.
+So this is content parity, not proven visual parity. If a responsive layout looks
+wrong on a narrow viewport, this is the first thing to suspect.
 
 ---
 
