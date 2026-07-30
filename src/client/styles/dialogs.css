@@ -1,0 +1,125 @@
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: center; }
+#inspect-modal { z-index: 120; }
+.modal-overlay.show { display: flex; }
+.modal-overlay-transparent { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; justify-content: center; align-items: center; pointer-events: none; }
+.modal-overlay-transparent.show { display: flex; }
+.modal-overlay-transparent .modal-box { pointer-events: all; }
+.modal-box { background: #f5e6c8; border: 3px solid #8B6914; border-radius: 16px; padding: 20px; max-width: 460px; width: 92%; max-height: 85vh; overflow-y: auto; box-shadow: 0 4px 24px rgba(0,0,0,0.2); color: #3a2a1a; }
+.modal-box h2 { color: #5a3a0a; font-size: 1.1rem; margin-bottom: 12px; text-align: center; }
+.modal-box .modal-close { float: right; background: none; border: none; color: #8a7a5a; font-size: 1.4rem; cursor: pointer; }
+.modal-box .modal-close:hover { color: #3a2a1a; }
+
+.card-choices { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+
+#inspect-modal .prop-header { font-size: 1.1rem; font-weight: bold; padding: 6px 0; text-align: center; border-radius: 6px; margin-bottom: 10px; }
+#inspect-modal .prop-detail { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #c4a96a; font-size: 0.8rem; }
+#inspect-modal .prop-detail .label { color: #7a5a3a; }
+#inspect-modal .prop-detail .value { font-weight: bold; font-family: monospace; }
+#inspect-modal .tier-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.75rem; }
+#inspect-modal .tier-table th { background: #e8d5a3; color: #5a3a0a; padding: 4px 6px; text-align: center; border: 1px solid #c4a96a; }
+#inspect-modal .tier-table td { padding: 3px 6px; text-align: center; border: 1px solid #c4a96a; }
+
+#card-draw-modal .card-face {
+  background: linear-gradient(135deg, #faf3e0, #f0e6c8);
+  border: 3px solid #8B7355;
+  border-radius: 16px;
+  padding: 28px 20px;
+  margin: 0;
+  max-width: 340px;
+  width: 300px;
+  aspect-ratio: 7 / 5;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  color: #2a1a0a;
+  font-family: 'Georgia', serif;
+  text-align: center;
+  position: relative;
+  transform: scale(0.9);
+  opacity: 0;
+  animation: cardDeal 0.4s ease-out forwards;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+}
+#card-draw-modal .card-face::before {
+  content: '';
+  position: absolute; top: 4px; left: 4px; right: 4px; bottom: 4px;
+  border: 2px solid rgba(139,115,85,0.3);
+  border-radius: 12px;
+  pointer-events: none;
+}
+#card-draw-modal .card-face::after {
+  content: '';
+  position: absolute; top: 8px; left: 8px; right: 8px; bottom: 8px;
+  border: 1px solid rgba(139,115,85,0.15);
+  border-radius: 8px;
+  pointer-events: none;
+}
+#card-draw-modal .card-face.mahkama-face {
+  background: linear-gradient(135deg, #dde8f7, #b8cce8);
+  border: 3px solid #2a4a7a;
+  box-shadow: 0 8px 32px rgba(42,74,122,0.3);
+}
+#card-draw-modal .card-face.mahkama-face::before { border-color: rgba(42,74,122,0.3); }
+#card-draw-modal .card-face.mahkama-face::after { border-color: rgba(42,74,122,0.15); }
+#card-draw-modal .card-face.mahkama-face .card-type { color: #2a4a7a; }
+#card-draw-modal .card-face.hazak-face {
+  background: linear-gradient(135deg, #f0e6c8, #e0d0a0);
+  border: 3px solid #b8962e;
+  box-shadow: 0 8px 32px rgba(196,150,46,0.3);
+}
+#card-draw-modal .card-face.hazak-face .card-type { color: #8b6914; }
+#card-draw-modal .card-face.hazak-face::before { border-color: rgba(196,150,46,0.3); }
+#card-draw-modal .card-face.hazak-face::after { border-color: rgba(196,150,46,0.15); }
+@keyframes cardDeal {
+  0% { transform: scale(0.7) rotateY(90deg) translateY(40px); opacity: 0; }
+  60% { transform: scale(1.05) rotateY(-5deg) translateY(0); opacity: 1; }
+  100% { transform: scale(1) rotateY(0deg) translateY(0); opacity: 1; }
+}
+#card-draw-modal .card-face .card-header { font-size: 3rem; margin-bottom: 6px; }
+#card-draw-modal .card-face .card-type { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 2px; color: #8B7355; border-bottom: 1px solid #d4c5a9; padding-bottom: 8px; margin-bottom: 10px; }
+#card-draw-modal .card-face .card-description { font-size: 1rem; line-height: 1.5; color: #3a2a1a; margin-bottom: 10px; }
+
+#card-draw-modal .card-face .card-city-list {
+  font-size: 1rem; color: #2a4a7a; font-weight: bold; margin: 6px 0;
+  padding: 8px; background: rgba(42,74,122,0.1); border-radius: 6px;
+}
+#card-draw-modal .card-face .card-effect-detail {
+  font-size: 1rem; color: #5a3a1a; padding: 6px 10px;
+  background: rgba(0,0,0,0.05); border-radius: 6px; margin: 4px 0;
+}
+#card-draw-modal .confirm-card-btn {
+  margin-top: 16px; font-size: 1.2rem; padding: 12px 36px;
+  background: linear-gradient(135deg, #c49a3c, #a07828); color: #fff;
+  border: none; border-radius: 10px; cursor: pointer; font-weight: bold;
+}
+#card-draw-modal .confirm-card-btn:hover { transform: scale(1.04); }
+#card-draw-modal .mahkama-confirm-btn { background: linear-gradient(135deg, #2a4a7a, #1a2a5a); }
+.card-city-icons { font-size: 1.2rem; letter-spacing: 4px; margin: 6px 0; }
+
+/* Preview modal */
+#preview-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 200; justify-content: center; align-items: center; background: rgba(0,0,0,0.5); }
+#preview-modal.show { display: flex; }
+#preview-modal .preview-box { background: #f5e6c8; border: 3px solid #8B6914; border-radius: 16px; padding: 16px; max-width: 95vw; max-height: 95vh; overflow: auto; position: relative; }
+#preview-modal .preview-box .preview-close { position: absolute; top: 4px; right: 10px; font-size: 1.4rem; cursor: pointer; color: #7a5a3a; background: none; border: none; z-index: 5; }
+#preview-modal .preview-board { transform-origin: top left; }
+
+/* Sell building confirmation popup */
+#sell-bldg-modal .modal-box { max-width: 380px; text-align: center; }
+
+/* Card fly animation */
+.card-fly { position: fixed; z-index: 999; pointer-events: none; width: 90px; height: 64px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 2rem; }
+.card-fly.mahkama-fly { background: linear-gradient(135deg, #b8cce8, #8aaece); border: 2px solid #2a4a7a; }
+.card-fly.hazak-fly { background: linear-gradient(135deg, #e8d8a8, #c8b878); border: 2px solid #b8962e; }
+
+/* Player selector popup (for selecting trade target) */
+#player-selector { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 500; display: none; justify-content: center; align-items: center; background: rgba(0,0,0,0.4); }
+#player-selector.show { display: flex; }
+#player-selector .ps-box { background: #f5e6c8; border: 3px solid #8B6914; border-radius: 16px; padding: 20px; max-width: 360px; width: 90%; }
+#player-selector .ps-box h3 { color: #5a3a0a; font-size: 1rem; margin-bottom: 12px; text-align: center; }
+#player-selector .ps-player { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; cursor: pointer; transition: background 0.1s; }
+#player-selector .ps-player:hover { background: #e8d5a3; }
+#player-selector .ps-player img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+#player-selector .ps-player .ps-name { font-weight: bold; font-size: 0.9rem; color: #3a2a1a; }
+#player-selector .ps-close-btn { display: block; margin: 10px auto 0; font-size: 0.8rem; color: #7a5a3a; cursor: pointer; text-align: center; }

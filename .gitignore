@@ -2,3 +2,13 @@
 node_modules/
 dist/
 .idea/
+coverage/
+*.tsbuildinfo
+.data/
+
+# OMC volatile session state. The work plan under .omc/plans/ IS tracked —
+# it is the contract this refactor is being executed against.
+.omc/state/
+.omc/sessions/
+.omc/drafts/
+.omc/project-memory.json

@@ -4,7 +4,7 @@
     "starting_cash_player": 1200,
     "pass_go_salary": 250,
     "max_players": 6,
-    "min_players": 3
+    "min_players": 2
   },
   "board_positions": [
     {

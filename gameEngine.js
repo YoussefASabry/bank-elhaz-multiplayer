@@ -1,6 +1,6 @@
-import boardData from './board.json' with { type: 'json' };
-import hazakData from './hazak.json' with { type: 'json' };
-import mahkamaData from './mahkama.json' with { type: 'json' };
+import boardData from './data/board.json' with { type: 'json' };
+import hazakData from './data/hazak.json' with { type: 'json' };
+import mahkamaData from './data/mahkama.json' with { type: 'json' };
 
 let callbacks = { log: [] };
 
