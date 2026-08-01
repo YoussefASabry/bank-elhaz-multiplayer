@@ -293,6 +293,8 @@ export type Pending =
       cityIds?: readonly SquareId[];
       /** Draws still queued after this card (square 4's second card). */
       remainingDraws: readonly DeckType[];
+      /** Name of the square the draw came from, for re-installing `deck_draw`. */
+      squareName: string;
     }
   | {
       kind: 'card_choice';
@@ -303,6 +305,8 @@ export type Pending =
       /** Resolved property pool for claim/move choices, in display order. */
       propertyPool: readonly SquareId[];
       remainingDraws: readonly DeckType[];
+      /** Name of the originating deck square, for re-installing `deck_draw`. */
+      squareName: string;
     };
 
 // ── Configuration ──
@@ -318,6 +322,12 @@ export interface GameConfig {
   /** Single bankruptcy model (bug B21: two contradictory ones existed). */
   onBankruptcy: BankruptcyRule;
   turnTimeoutSeconds: number;
+  /**
+   * Rent gets a longer window than an ordinary action (rules.ts). Carried in
+   * GameConfig — not server state — so a restored game (B19) keeps its rent
+   * window instead of silently falling back to the default.
+   */
+  rentTurnTimeoutSeconds: number;
 }
 
 // ── Trades and bids ──
@@ -344,6 +354,12 @@ export interface LastRoll {
 export interface GameState {
   config: GameConfig;
   board: Board;
+  /**
+   * The seat that may send KICK_PLAYER. Like every other id in state, it is a
+   * stable `SeatId`, never a socket id. Null only for an empty seat list, which
+   * the lobby prevents.
+   */
+  hostId: SeatId | null;
   /** Dynamic square state, kept separate so board data is never mutated. */
   ownership: Record<SquareId, SquareOwnership>;
   players: Player[];

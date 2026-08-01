@@ -90,6 +90,14 @@ export interface RoomOptions {
   moneyVisible: boolean;
   tradeTiming: 'anytime' | 'own_turn';
   onBankruptcy: 'eliminate' | 'jail';
+  /**
+   * Optional server-side tuning. Old clients omit these and get the engine
+   * defaults (90 s / 120 s). The host UI may expose them later; tests set them
+   * short so timeouts are fast. Restore-safe because the values are mirrored
+   * into GameConfig.
+   */
+  turnTimeoutSeconds?: number;
+  rentTurnTimeoutSeconds?: number;
 }
 
 // ── Snapshots (bug B19) ──

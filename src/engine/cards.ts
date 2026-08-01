@@ -325,6 +325,7 @@ export function setupChoices(state: GameState, seatId: SeatId, card: Card, rng: 
     options: card.choices,
     propertyPool,
     remainingDraws: [],
+    squareName: '', // placeholder — the caller overlays the originating square name
   };
   return { state, events, pending };
 }

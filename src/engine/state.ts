@@ -15,7 +15,7 @@
 
 import { loadBoard, isOwnable } from './board.js';
 import { createDecks } from './deck.js';
-import { DEFAULT_TURN_TIMEOUT_SECONDS } from '../shared/rules.js';
+import { DEFAULT_TURN_TIMEOUT_SECONDS, RENT_TURN_TIMEOUT_SECONDS } from '../shared/rules.js';
 import type { Rng } from './rng.js';
 import type {
   Board,
@@ -46,6 +46,7 @@ export function defaultConfig(board: Board, overrides: Partial<GameConfig> = {})
     tradeTiming: 'anytime',
     onBankruptcy: 'eliminate',
     turnTimeoutSeconds: DEFAULT_TURN_TIMEOUT_SECONDS,
+    rentTurnTimeoutSeconds: RENT_TURN_TIMEOUT_SECONDS,
     ...overrides,
   };
 }
@@ -90,6 +91,7 @@ export function createInitialState(
     board,
     ownership,
     players: seats.map((s) => createPlayer(s, config.startingCash, startId)),
+    hostId: seats[0]?.id ?? null,
     currentPlayerIndex: 0,
     turnNumber: 1,
     phase: 'roll',

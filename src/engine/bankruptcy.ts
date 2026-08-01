@@ -54,6 +54,19 @@ export function checkInsolvency(state: GameState, seatId: SeatId): DomainEvent[]
   return events;
 }
 
+/**
+ * Voluntary bankruptcy: the player admits they cannot cover what they owe (the
+ * rent dialog's "Declare bankruptcy" path). Runs the SAME single model as an
+ * involuntary negative balance — checkInsolvency — by forcing the balance
+ * negative rather than duplicating the eliminate/jail logic here.
+ */
+export function declareBankruptcy(state: GameState, seatId: SeatId): DomainEvent[] {
+  const player = requirePlayer(state, seatId);
+  if (player.isBankrupt || player.eliminated) return [];
+  player.money = -1;
+  return checkInsolvency(state, seatId);
+}
+
 /** Host kicked a player. Never splices the array — that shifted turn order (B06). */
 export function kickPlayer(state: GameState, targetId: SeatId, by: SeatId): DomainEvent[] {
   const player = requirePlayer(state, targetId);
