@@ -714,7 +714,17 @@ function dispatch(state: GameState, action: Action, rng: Rng): ActionResult {
     case 'TIMEOUT': {
       const synthetic = defaultActionFor(state);
       if (synthetic === null) return { state, events };
-      return applyAction(state, synthetic, rng);
+      const inner = applyAction(state, synthetic, rng);
+      /**
+       * The inner `applyAction` already bumped `stateVersion`, and the outer
+       * one is about to bump it again for this same TIMEOUT. One action must
+       * mean one version, or clients see a gap and refetch a snapshot, so the
+       * inner bump is undone here and only the outer one survives.
+       */
+      const innerRejected =
+        inner.events.length === 1 && inner.events[0]?.type === 'REJECTED';
+      if (!innerRejected) inner.state.stateVersion -= 1;
+      return inner;
     }
 
     default: {
