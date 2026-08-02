@@ -77,7 +77,6 @@
   #rc-turn-banner, #rc-timer-bar { display: none !important; }
   #rc-dice-area { margin: 4px 0; display: flex; gap: 6px; justify-content: center; align-items: center; flex-wrap: wrap; }
   #rc-dice-area .die { width: 70px !important; height: 70px !important; font-size: 2.3rem !important; }
-  #rc-dice-area .die.rolling { animation: diceShake 0.15s ease-in-out infinite; }
   #player-corners { flex-shrink: 0; position: relative; width: 100%; height: auto; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; padding: 6px 4px; top: auto; left: auto; pointer-events: auto; }
   .player-corner { position: relative; top: auto !important; left: auto !important; right: auto !important; bottom: auto !important; transform: none !important; min-width: 0; max-width: none; width: calc(50% - 6px); padding: 5px 8px; font-size: 0.65rem; gap: 3px; border-radius: 8px; }
   .player-corner .pc-header { font-size: 0.7rem; gap: 3px; }
@@ -126,7 +125,6 @@
   #rc-turn-banner, #rc-timer-bar { display: none !important; }
   #rc-dice-area { margin: 4px 0; display: flex; gap: 6px; justify-content: center; align-items: center; flex-wrap: wrap; }
   #rc-dice-area .die { width: 70px !important; height: 70px !important; font-size: 2.3rem !important; }
-  #rc-dice-area .die.rolling { animation: diceShake 0.15s ease-in-out infinite; }
   #player-corners { flex-shrink: 0; position: relative; width: 100%; height: auto; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; padding: 6px 4px; top: auto; left: auto; pointer-events: auto; }
   .player-corner { position: relative; top: auto !important; left: auto !important; right: auto !important; bottom: auto !important; transform: none !important; min-width: 0; max-width: none; width: calc(50% - 6px); padding: 5px 8px; font-size: 0.65rem; gap: 3px; border-radius: 8px; }
   .player-corner .pc-header { font-size: 0.7rem; gap: 3px; }

@@ -11,4 +11,9 @@ coverage/
 .omc/state/
 .omc/sessions/
 .omc/drafts/
+.omc/notepad.md
 .omc/project-memory.json
+
+# Playwright MCP session artifacts (snapshots, console logs, screenshots)
+.playwright-mcp/
+/*.png

@@ -1,5 +1,19 @@
 /* ── Game layout - full viewport, board centered, players in corners ── */
-#game-container { display: none; width: 100vw; height: 100vh; padding: 0; margin: 0; overflow: visible; position: relative; background: var(--bg); }
+#game-container {
+  display: none; width: 100vw; height: 100vh; padding: 0; margin: 0; overflow: visible; position: relative; background: var(--bg);
+  /* Board is a fixed-size centred grid (see #board grid-template below):
+     3*110px + 8*85px cols + 10*3px gaps + 2*5px padding + 2*4px border = 1058px.
+     Side player cards anchor off these so they never overlap the board. */
+  --board-w: 1058px;
+  --board-half: calc(var(--board-w) / 2);
+  --pc-gap: 12px;   /* clearance between board edge and a player card */
+  --pc-w: 160px;    /* matches .player-corner min-width */
+}
+/* Distance from the viewport edge to the board edge, minus a gap — but never so
+   far that the card is pushed off-screen on narrow desktops. */
+#player-corners {
+  --pc-inset: min(calc(50% + var(--board-half) + var(--pc-gap)), calc(100% - var(--pc-w) - 8px));
+}
 .game-layout { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; position: relative; padding: 0 100px; }
 
 /* Player corner panels */
@@ -41,18 +55,18 @@
 #player-action-content .popup-header img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #c4a96a; }
 #player-action-content .popup-actions { display: flex; flex-direction: column; gap: 8px; }
 #player-action-content .popup-actions .btn { font-size: 0.9rem; padding: 10px 20px; }
-.player-corner.corner-tl { top: 100px; left: 80px; }
-.player-corner.corner-tr { top: 100px; right: 80px; }
-.player-corner.corner-bl { bottom: 16px; left: 80px; }
-.player-corner.corner-br { bottom: 16px; right: 80px; }
+.player-corner.corner-tl { top: 100px; right: var(--pc-inset); left: auto; }
+.player-corner.corner-tr { top: 100px; left: var(--pc-inset); right: auto; }
+.player-corner.corner-bl { bottom: 16px; right: var(--pc-inset); left: auto; }
+.player-corner.corner-br { bottom: 16px; left: var(--pc-inset); right: auto; }
 .player-corner.corner-tc { top: 100px; left: 50%; transform: translateX(-50%); }
 .player-corner.corner-bc { bottom: 16px; left: 50%; transform: translateX(-50%); }
-.player-corner.corner-lt { top: 33%; left: 60px; transform: translateY(-50%); }
-.player-corner.corner-lc { top: 50%; left: 60px; transform: translateY(-50%); }
-.player-corner.corner-lb { top: 67%; left: 60px; transform: translateY(-50%); }
-.player-corner.corner-rt { top: 33%; right: 60px; transform: translateY(-50%); }
-.player-corner.corner-rc { top: 50%; right: 60px; transform: translateY(-50%); }
-.player-corner.corner-rb { top: 67%; right: 60px; transform: translateY(-50%); }
+.player-corner.corner-lt { top: 33%; right: var(--pc-inset); left: auto; transform: translateY(-50%); }
+.player-corner.corner-lc { top: 50%; right: var(--pc-inset); left: auto; transform: translateY(-50%); }
+.player-corner.corner-lb { top: 67%; right: var(--pc-inset); left: auto; transform: translateY(-50%); }
+.player-corner.corner-rt { top: 33%; left: var(--pc-inset); right: auto; transform: translateY(-50%); }
+.player-corner.corner-rc { top: 50%; left: var(--pc-inset); right: auto; transform: translateY(-50%); }
+.player-corner.corner-rb { top: 67%; left: var(--pc-inset); right: auto; transform: translateY(-50%); }
 
 
 
@@ -171,8 +185,26 @@
 @keyframes pfpAppear { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 .center-cell .center-dice { display: flex; gap: 6px; justify-content: center; }
 .center-cell .center-dice .die { width: 64px; height: 64px; background: #fff; color: #3a2a1a; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.9rem; font-weight: bold; box-shadow: 0 3px 10px rgba(0,0,0,0.2); border: 2px solid #c4a96a; }
-.center-cell .center-dice .die.rolling { animation: diceShake 0.15s ease-in-out infinite; }
-@keyframes diceShake { 0%,100% { transform: rotate(0deg); } 25% { transform: rotate(-15deg) scale(1.1); } 75% { transform: rotate(15deg) scale(1.1); } }
+/* Dice: a finite tumble that ends flat on the result (was an infinite ±15deg
+   shake that never stopped and never rotated past a wobble). */
+.die.rolling { animation: diceTumble 0.62s cubic-bezier(0.33, 0.05, 0.2, 1) 1 both; }
+.die.settled { animation: diceSettle 0.24s cubic-bezier(0.34, 1.56, 0.64, 1) 1 both; }
+@keyframes diceTumble {
+  0%   { transform: translateY(0)     rotate(0deg)   scale(1);    }
+  15%  { transform: translateY(-20px) rotate(150deg) scale(1.14); }
+  32%  { transform: translateY(-4px)  rotate(310deg) scale(1.04); }
+  50%  { transform: translateY(-14px) rotate(470deg) scale(1.1);  }
+  70%  { transform: translateY(-2px)  rotate(610deg) scale(1.02); }
+  86%  { transform: translateY(-6px)  rotate(690deg) scale(1.05); }
+  100% { transform: translateY(0)     rotate(720deg) scale(1);    }
+}
+@keyframes diceSettle {
+  0%   { transform: scale(1.16); }
+  100% { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .die.rolling, .die.settled { animation: none; }
+}
 .center-cell .cc-timer { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.85rem; font-family: monospace; color: #2a4a7a; background: rgba(255,255,255,0.6); padding: 4px 14px; border-radius: 8px; width: fit-content; margin: 0 auto; border: 1px solid #8B6914; }
 .center-cell .cc-timer .timer-fill { width: 60px; height: 10px; background: #e0d5c0; border-radius: 5px; overflow: hidden; border: 1px solid #c4a96a; }
 .center-cell .cc-timer .timer-fill-inner { height: 100%; background: #2a7a5a; border-radius: 5px; transition: width 0.3s; }
