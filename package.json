@@ -4,8 +4,8 @@
   "type": "module",
   "description": "Bank El Haz — Online multiplayer (also includes local hot-seat)",
   "scripts": {
-    "dev": "node -e \"import('child_process').then(({spawn})=>{const s=spawn('npx',['vite-node','src/server/index.ts'],{stdio:'inherit'});const c=spawn('npx',['vite','--port','5173'],{stdio:'inherit'});process.on('SIGINT',()=>{s.kill();c.kill();process.exit()})})\"",
-    "server": "vite-node src/server/index.ts",
+    "dev": "node -e \"import('child_process').then(({spawn})=>{const s=spawn('npx',['tsx','src/server/index.ts'],{stdio:'inherit'});const c=spawn('npx',['vite','--port','5173'],{stdio:'inherit'});process.on('SIGINT',()=>{s.kill();c.kill();process.exit()})})\"",
+    "server": "tsx src/server/index.ts",
     "client": "vite --port 5173",
     "build": "vite build",
     "preview": "vite preview",
@@ -20,13 +20,15 @@
     "socket.io": "^4.7.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.10.7",
+    "@vitest/coverage-v8": "^3.0.5",
+    "socket.io-client": "^4.7.5",
+    "tsx": "^4.23.1",
+    "typescript": "^5.7.3",
     "vite": "^6.3.3",
     "vite-node": "^3.2.4",
-    "typescript": "^5.7.3",
-    "vitest": "^3.0.5",
-    "@vitest/coverage-v8": "^3.0.5",
-    "@types/node": "^22.10.7",
-    "@types/express": "^4.17.21",
-    "socket.io-client": "^4.7.5"
+    "vitest": "^3.0.5"
   }
 }

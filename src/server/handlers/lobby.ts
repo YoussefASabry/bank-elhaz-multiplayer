@@ -74,7 +74,7 @@ export function registerLobbyHandlers(ctx: ServerCtx, socket: TypedSocket): void
 
     const playerId = room.seats[0]?.id ?? '';
     socket.emit('room_created', { roomCode: room.code, playerId, players: wirePlayers(room) });
-    cb?.({ ok: true, roomCode: room.code, playerId });
+    cb?.({ ok: true, roomCode: room.code, playerId, players: wirePlayers(room) });
   });
 
   socket.on('join_game', (p, cb) => {
@@ -100,7 +100,7 @@ export function registerLobbyHandlers(ctx: ServerCtx, socket: TypedSocket): void
       playerId: seat.id,
       players: wirePlayers(room),
     });
-    cb?.({ ok: true, roomCode: room.code, playerId: seat.id });
+    cb?.({ ok: true, roomCode: room.code, playerId: seat.id, players: wirePlayers(room) });
 
     // Joining a room whose game is already running is a reconnect; hand them
     // the current position immediately rather than leaving them on a blank board.

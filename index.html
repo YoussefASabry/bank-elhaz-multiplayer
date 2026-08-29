@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
   <title>بنك الحظ - Bank El Haz (Online)</title>
-  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
   <link rel="stylesheet" href="src/client/styles/base.css" />
   <link rel="stylesheet" href="src/client/styles/board.css" />
   <link rel="stylesheet" href="src/client/styles/dialogs.css" />
@@ -203,6 +203,7 @@
       <button class="confirm-card-btn" id="btn-confirm-card" onclick="confirmBlindCard()" style="display:block;margin:12px auto 0;">✅ Confirm</button>
     </div>
   </div>
+</div>
 <div class="modal-overlay" id="bid-create-modal">
   <div class="modal-box" style="max-width: 460px;">
     <button class="modal-close" onclick="closeBidCreate()">✕</button>
@@ -426,6 +427,138 @@
   let roomCode = null;
   let gameState = null;
   let isAnimating = false;
+
+  // ── Wire-shape adapter ──
+  // The refactored server projects a normalized ClientState (board + ownership,
+  // one `pending` union, deck counts, config). The inline UI below was written
+  // against the legacy shape (boardSquares[], pendingXxx fields, gameMeta,
+  // full deck arrays, activeBids). This adapter rebuilds that legacy view from
+  // the wire payload exactly once, at the four gameState assignment sites.
+  // It is idempotent: a payload that already carries boardSquares passes through.
+  const TIER_RENT_KEY = { garage: 'garage_rent', rest_stop: 'rest_stop_rent', market: 'market_rent' };
+  const KIND_TYPE_MAP = {
+    property: 'property',
+    utility: 'property',
+    corner: 'corner_square',
+    deck: 'deck_trigger',
+    dual_deck: 'dual_deck_trigger',
+  };
+  function keyifyTier(rec) {
+    return Object.fromEntries(
+      Object.entries(rec || {}).map(([tier, v]) => [TIER_RENT_KEY[tier] ?? tier, v]),
+    );
+  }
+  function adaptGameState(gs) {
+    if (!gs || gs.boardSquares) return gs;
+
+    const squares = (gs.board?.squares || []).map((sq) => {
+      const own = (gs.ownership || {})[sq.id] || {};
+      const out = {
+        id: sq.id,
+        name: sq.name,
+        description: sq.description,
+        type: KIND_TYPE_MAP[sq.kind] || 'property',
+        owner: own.owner ?? null,
+        upgrade: own.upgrade ?? null,
+      };
+      if (sq.colorGroup !== undefined) out.color_group = sq.colorGroup;
+      if (sq.purchasePrice !== undefined) out.purchase_price = sq.purchasePrice;
+      if (sq.baseRent !== undefined) out.base_rent = sq.baseRent;
+      if (sq.deck !== undefined) out.deck_type = sq.deck;
+      if (sq.buildCost !== undefined) out.owner_paying = keyifyTier(sq.buildCost);
+      if (sq.visitorRent !== undefined) out.visitor_paying = keyifyTier(sq.visitorRent);
+      return out;
+    });
+    gs.boardSquares = squares;
+
+    if (gs.config && !gs.gameMeta) {
+      gs.gameMeta = {
+        passGoSalary: gs.config.passGoSalary,
+        moneyVisible: gs.config.moneyVisible,
+        diceCount: gs.config.diceCount,
+      };
+    }
+
+    const p = gs.pending && gs.pending.kind ? gs.pending : { kind: 'none' };
+    const squareOf = (id) => squares.find((s) => s.id === id);
+    gs.pendingDeckDraw = p.kind === 'deck_draw'
+      ? { playerId: p.playerId, deckType: p.queue.length > 1 ? 'dual' : p.queue[0], squareName: p.squareName }
+      : null;
+    gs.pendingRentPayment = p.kind === 'rent'
+      ? { playerId: p.playerId, ownerId: p.ownerId, amount: p.amount, squareId: p.squareId }
+      : null;
+    gs.pendingClubChoice = p.kind === 'club'
+      ? { playerId: p.playerId, membershipCost: p.membershipCost, guestFineFee: p.guestFineFee }
+      : null;
+    gs.pendingPropertyBuy = p.kind === 'property_buy'
+      ? { playerId: p.playerId, squareId: p.squareId, square: squareOf(p.squareId) }
+      : null;
+    gs.pendingUpgradeChoice = p.kind === 'upgrade'
+      ? {
+          playerId: p.playerId,
+          square: squareOf(p.squareId),
+          options: (p.options || []).map((o) => ({ type: o.tier, cost: o.cost, visitorRent: o.visitorRent })),
+        }
+      : null;
+    gs.activeCardChoice = p.kind === 'card_choice'
+      ? {
+          playerId: p.playerId,
+          title: p.title,
+          _deckType: p.card?.deck,
+          options: flattenCardOptions(p, squareOf),
+        }
+      : null;
+    if (p.kind !== 'blind_card' && p.kind !== 'card_choice') gs.blindCard = null;
+
+    gs.activeBids = (gs.bids || []).map((b) => ({
+      id: b.id,
+      playerId: b.playerId,
+      cash: b.basket?.cash ?? 0,
+      propIds: [...(b.basket?.squareIds ?? [])],
+      jailCards: b.basket?.jailCards ?? 0,
+      offers: (b.offers || []).map((o) => ({
+        id: o.id,
+        playerId: o.playerId,
+        cash: o.basket?.cash ?? 0,
+        propIds: [...(o.basket?.squareIds ?? [])],
+        jailCards: o.basket?.jailCards ?? 0,
+      })),
+    }));
+
+    return gs;
+  }
+  // The server's card_choice handler indexes the FLATTENED option list (a
+  // pool-bearing choice expands to one entry per resolved city). Mirror that
+  // expansion here so button indexes line up with `choiceIndex`.
+  function flattenCardOptions(pending, squareOf) {
+    const pool = pending.propertyPool || [];
+    const out = [];
+    (pending.options || []).forEach((choice) => {
+      const isPool = choice.type === 'claim_free_property' || choice.type === 'move_to_dynamic_pool';
+      if (isPool && pool.length > 0) {
+        pool.forEach((sqId) => {
+          const sq = squareOf(sqId);
+          const label = sq ? `${choice.label ? choice.label + ': ' : ''}${sq.name}` : (choice.label || 'مدينة');
+          out.push({ label, action: choice.type });
+        });
+      } else {
+        let label = choice.label;
+        if (!label) {
+          if (choice.type === 'receive_cash') label = `احصل على $${choice.amount}`;
+          else if (choice.type === 'pay_fine') label = `ادفع $${choice.amount}`;
+          else if (choice.type === 'go_to_prison') label = 'اذهب إلى السجن';
+          else label = choice.type;
+        }
+        out.push({ label, action: choice.type === 'receive_cash' ? 'cash' : choice.type });
+      }
+    });
+    return out;
+  }
+  /** Deck size from the counts-only projection (with legacy-array fallback). */
+  function deckCount(st, name) {
+    return st?.decks?.[name]?.drawCount ?? st?.[name + 'Deck']?.length ?? 0;
+  }
+
   let mySelectedAvatar = parseInt(localStorage.getItem('bankelhaz_avatar')) || 1;
   // Pre-fill name from saved preferences
   const savedPrefs = JSON.parse(localStorage.getItem('bankelhaz_prefs') || '{}');
@@ -751,7 +884,7 @@
 
    socket.on('game_started', (data) => {
     try {
-      gameState = data.gameState;
+      gameState = adaptGameState(data.gameState);
       persistGameState();
       document.getElementById('lobby-screen').style.display = 'none';
       document.getElementById('game-container').style.display = 'block';
@@ -772,7 +905,7 @@
     roomCode = data.roomCode;
     document.querySelectorAll('.socket-disconnected-overlay').forEach(el => el.remove());
     if (data.gameState) {
-      gameState = data.gameState;
+      gameState = adaptGameState(data.gameState);
       persistGameState();
       document.getElementById('lobby-screen').style.display = 'none';
       document.getElementById('game-container').style.display = 'block';
@@ -799,7 +932,7 @@
       roomCode = data.roomCode;
       myPlayerId = data.playerId;
       if (data.gameState) {
-        gameState = data.gameState;
+        gameState = adaptGameState(data.gameState);
         persistGameState();
         document.getElementById('lobby-screen').style.display = 'none';
         document.getElementById('game-container').style.display = 'block';
@@ -848,7 +981,7 @@
           if (np) np._prevMoney = op._prevMoney;
         });
       }
-      gameState = data.gameState;
+      gameState = adaptGameState(data.gameState);
       persistGameState();
     }
     updateUI();
@@ -1588,7 +1721,7 @@
     const mahkamaPile = document.createElement('div');
     mahkamaPile.className = 'deck-pile mahkama-pile';
     mahkamaPile.dataset.deck = 'mahkama';
-    mahkamaPile.innerHTML = `<div class="card-back mahkama-back">⚖️</div><div class="deck-label">⚖️ المحكمة (${gameState.mahkamaDeck?.length || 0})</div>`;
+    mahkamaPile.innerHTML = `<div class="card-back mahkama-back">⚖️</div><div class="deck-label">⚖️ المحكمة (${deckCount(gameState, 'mahkama')})</div>`;
     mahkamaPile.onclick = () => onDeckClick('mahkama');
     board.appendChild(mahkamaPile);
     applyDeckTheme(mahkamaPile, 'deck-mahkama');
@@ -1596,7 +1729,7 @@
     const hazakPile = document.createElement('div');
     hazakPile.className = 'deck-pile hazak-pile';
     hazakPile.dataset.deck = 'hazak';
-    hazakPile.innerHTML = `<div class="card-back hazak-back">🍀</div><div class="deck-label">🍀 حظك (${gameState.hazakDeck?.length || 0})</div>`;
+    hazakPile.innerHTML = `<div class="card-back hazak-back">🍀</div><div class="deck-label">🍀 حظك (${deckCount(gameState, 'hazak')})</div>`;
     hazakPile.onclick = () => onDeckClick('hazak');
     board.appendChild(hazakPile);
     applyDeckTheme(hazakPile, 'deck-hazak');
@@ -1684,17 +1817,18 @@
     const state = gameState;
 
     // Close all turn-limited modals when state changes
-    ['buy-modal','upgrade-modal','card-draw-modal','inspect-modal','inventory-modal','trade-modal'].forEach(id => {
+    ['buy-modal','upgrade-modal','card-draw-modal','inspect-modal','inventory-modal'].forEach(id => {
       document.getElementById(id)?.classList.remove('show');
     });
+    if (tradeState.active) renderTradeUI();
 
     const deckEl = document.getElementById('deck-count');
-    if (deckEl) deckEl.textContent = `🍀: ${state.hazakDeck?.length || 0} | ⚖️: ${state.mahkamaDeck?.length || 0}`;
+    if (deckEl) deckEl.textContent = `🍀: ${deckCount(state, 'hazak')} | ⚖️: ${deckCount(state, 'mahkama')}`;
     // Update deck pile labels
     const mahkamaLabel = document.querySelector('.mahkama-pile .deck-label');
     const hazakLabel = document.querySelector('.hazak-pile .deck-label');
-    if (mahkamaLabel) mahkamaLabel.textContent = `المحكمة (${state.mahkamaDeck?.length || 0})`;
-    if (hazakLabel) hazakLabel.textContent = `حظك (${state.hazakDeck?.length || 0})`;
+    if (mahkamaLabel) mahkamaLabel.textContent = `المحكمة (${deckCount(state, 'mahkama')})`;
+    if (hazakLabel) hazakLabel.textContent = `حظك (${deckCount(state, 'hazak')})`;
 
     // Active cell highlight
     document.querySelectorAll('.cell.active').forEach(el => el.classList.remove('active'));

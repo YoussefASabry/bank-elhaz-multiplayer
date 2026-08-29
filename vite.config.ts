@@ -5,7 +5,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/socket.io': {
-        target: 'http://localhost:3001',
+        target: process.env.VITE_API_TARGET ?? 'http://localhost:3001',
         ws: true,
       },
     },

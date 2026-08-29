@@ -17,3 +17,10 @@ coverage/
 # Playwright MCP session artifacts (snapshots, console logs, screenshots)
 .playwright-mcp/
 /*.png
+tests/e2e/_diag.spec.ts
+
+# Playwright run artifacts + ad-hoc probe scripts
+playwright-report/
+test-results/
+screenshots/
+.e2e-probes/

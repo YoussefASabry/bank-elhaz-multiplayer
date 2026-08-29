@@ -217,7 +217,14 @@ export interface ServerToClientEvents {
 
 // ── client → server (37; `sell_to_bank_for_rent` deliberately absent) ────────
 
-type Ack = (r: { ok: boolean; roomCode?: string; playerId?: SeatId; error?: string }) => void;
+type Ack = (r: {
+  ok: boolean;
+  roomCode?: string;
+  playerId?: SeatId;
+  /** Roster snapshot so the ack alone can render the waiting room. */
+  players?: WirePlayer[];
+  error?: string;
+}) => void;
 
 export interface ClientToServerEvents {
   // lobby (6)

@@ -85,7 +85,7 @@ function localIPv4(): string {
 }
 
 export function start(options: StartOptions = {}): { close: () => Promise<void> } {
-  const port = options.port ?? Number(process.env['PORT'] ?? 3001);
+  let port = options.port ?? Number(process.env['PORT'] ?? 3001);
   const app = createApp();
   const httpServer = createServer(app);
   const io: TypedServer = new Server(httpServer, {
@@ -96,6 +96,24 @@ export function start(options: StartOptions = {}): { close: () => Promise<void> 
 
   io.on('connection', (socket) => {
     registerHandlers(ctx, socket as TypedSocket);
+  });
+
+  /**
+   * If the preferred port is taken (a stale server from a previous session is
+   * the usual culprit), walk up rather than die — but say so loudly, so nobody
+   * ends up playing against the wrong process.
+   */
+  let retriesLeft = 10;
+  httpServer.on('error', (err: NodeJS.ErrnoException) => {
+    if (err?.code === 'EADDRINUSE' && retriesLeft > 0) {
+      retriesLeft -= 1;
+      console.log(`⚠️  Port ${port} is busy — trying ${port + 1}`);
+      port += 1;
+      httpServer.listen(port, '0.0.0.0');
+      return;
+    }
+    console.error(`Failed to start server on port ${port}:`, err.message);
+    process.exit(1);
   });
 
   httpServer.listen(port, '0.0.0.0', () => {
