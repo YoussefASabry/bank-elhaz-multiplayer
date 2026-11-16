@@ -1,0 +1,73 @@
+/* ════════════════════════════════════════
+   TRADE V2 — mutual proposal panels
+   ════════════════════════════════════════ */
+#trade-modal .modal-box { max-width: 680px; }
+.trade-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #c4a96a; padding-bottom: 8px; margin-bottom: 8px; }
+.trade-header h2 { margin: 0; font-size: 1rem; }
+.trade-header-actions { display: flex; gap: 6px; }
+.trade-header-actions button { background: #e8d5a3; border: 1px solid #c4a96a; border-radius: 6px; padding: 3px 10px; cursor: pointer; font-size: 0.85rem; color: #5a3a0a; }
+.trade-header-actions button:hover { background: #d4c4a0; }
+.trade-timer { text-align: center; font-size: 0.8rem; font-family: monospace; color: #7a5a3a; margin-bottom: 6px; }
+.trade-timer.urgent { color: #c0392b; font-weight: bold; }
+.trade-status { text-align: center; font-size: 0.8rem; color: #5a3a0a; padding: 4px 0; margin-bottom: 6px; background: #faf0dc; border-radius: 6px; }
+.trade-panels { display: flex; gap: 12px; }
+.trade-panel { flex: 1; background: #faf0dc; border: 2px solid #c4a96a; border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 6px; min-height: 220px; }
+.trade-panel.mine { border-color: #5b7db1; background: #eaf0fa; }
+.trade-panel.theirs { border-color: #b15b5b; background: #faeaea; }
+.trade-panel-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 0.85rem; color: #3a2a1a; padding-bottom: 4px; border-bottom: 1px solid #d4c5a9; margin-bottom: 4px; }
+.trade-panel-label { font-size: 0.65rem; color: #7a5a3a; text-transform: uppercase; letter-spacing: 1px; }
+.trade-cash-row { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; }
+.trade-cash-row input[type=number] { width: 80px; padding: 3px 6px; border-radius: 4px; border: 1px solid #c4a96a; background: #fff; color: #3a2a1a; font-size: 0.8rem; }
+.trade-cash-row .max-btn { font-size: 0.65rem; color: #2a4a7a; cursor: pointer; padding: 2px 6px; border-radius: 4px; background: #e0e8f0; border: 1px solid #b0c0d0; }
+.trade-cash-row .max-btn:hover { background: #c0d0e0; }
+.trade-jail-row { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; }
+.trade-jail-row input[type=number] { width: 50px; padding: 3px 6px; border-radius: 4px; border: 1px solid #c4a96a; background: #fff; color: #3a2a1a; font-size: 0.8rem; }
+.trade-props-dropzone { flex: 1; border: 2px dashed #b0c0d0; border-radius: 8px; padding: 6px; min-height: 80px; transition: background 0.15s; position: relative; }
+.trade-props-dropzone.drag-over { background: #d0e0f0; border-color: #5b7db1; }
+.dropzone-label { font-size: 0.65rem; color: #999; text-align: center; padding: 6px; }
+.trade-props-display { flex: 1; border: 1px solid #d4c5a9; border-radius: 8px; padding: 6px; min-height: 80px; background: rgba(255,255,255,0.5); }
+.trade-props-list { display: flex; flex-wrap: wrap; gap: 4px; }
+.trade-prop-item { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; background: #fff; border: 1px solid #c4a96a; border-radius: 6px; font-size: 0.7rem; font-weight: bold; cursor: default; }
+.trade-prop-item .remove-prop { cursor: pointer; color: #c0392b; font-size: 0.8rem; margin-left: 2px; font-weight: bold; }
+.trade-prop-item .remove-prop:hover { color: #e74c3c; }
+.mini-prop-card { transition: transform 0.15s, box-shadow 0.15s; }
+.mini-prop-card:hover { transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+.trade-buttons { display: flex; gap: 6px; margin-top: 4px; }
+.trade-buttons .btn { flex: 1; font-size: 0.8rem; padding: 6px 12px; }
+.trade-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 8px; border-top: 1px solid #c4a96a; font-size: 0.8rem; color: #7a5a3a; }
+
+/* Player properties in corners — draggable card style */
+.pc-props .mini-card { cursor: grab; transition: transform 0.1s, box-shadow 0.1s; }
+.pc-props .mini-card:hover { transform: scale(1.1); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+.pc-props .mini-card.has-upgrade { opacity: 0.5; cursor: not-allowed; }
+.pc-props .mini-card.has-upgrade .bldg-sell-hint { display: inline; font-size: 0.55rem; color: #c0392b; }
+
+/* Minimized trade bar */
+#trade-minimized-bar {
+  position: fixed; bottom: 180px; right: 14px; z-index: 90;
+  background: #2a4a7a; color: #ffd700; border-radius: 10px;
+  padding: 8px 16px; font-size: 0.85rem; font-weight: bold;
+  cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  display: none; transition: transform 0.15s;
+  border: 2px solid #ffd700;
+}
+#trade-minimized-bar:hover { transform: scale(1.05); }
+#trade-minimized-bar .bar-close { margin-left: 8px; color: #ff6666; cursor: pointer; font-size: 1rem; }
+
+/* ════════════════════════════════════════
+   BID SYSTEM — floating boxes
+   ════════════════════════════════════════ */
+#bid-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 60; }
+.bid-float-box { position: fixed; pointer-events: all; background: rgba(245,230,200,0.97); border: 2px solid #c49a3c; border-radius: 10px; padding: 8px; min-width: 220px; max-width: 280px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); font-size: 0.8rem; z-index: 55; }
+.bid-float-box .bf-header { display: flex; align-items: center; gap: 4px; font-weight: bold; color: #5a3a0a; margin-bottom: 4px; font-size: 0.8rem; }
+.bid-float-box .bf-header img { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; }
+.bid-float-box .bf-offer { font-size: 0.7rem; color: #2a4a7a; margin-bottom: 4px; padding: 3px 6px; background: #eaf0fa; border-radius: 4px; }
+.bid-float-box .bf-respond-btn { font-size: 0.65rem; padding: 3px 8px; background: #5b7db1; color: #fff; border: none; border-radius: 4px; cursor: pointer; width: 100%; }
+.bid-float-box .bf-respond-btn:hover { background: #3a5a8a; }
+.bid-float-box .bf-responses { margin-top: 4px; border-top: 1px solid #d4c5a9; padding-top: 4px; max-height: 100px; overflow-y: auto; }
+.bid-float-box .bf-response { display: flex; justify-content: space-between; align-items: center; padding: 2px 0; font-size: 0.65rem; color: #3a2a1a; }
+.bid-float-box .bf-response .accept-offer-btn { color: #2e7d32; cursor: pointer; font-weight: bold; font-size: 0.7rem; padding: 1px 4px; border-radius: 3px; }
+.bid-float-box .bf-response .accept-offer-btn:hover { background: #c8e6c9; }
+.bid-float-box .bf-cancel-btn { font-size: 0.6rem; color: #c0392b; cursor: pointer; margin-top: 4px; text-align: center; }
+.bid-float-box .bf-cancel-btn:hover { text-decoration: underline; }
+.bid-float-box .bf-expired { opacity: 0.4; }

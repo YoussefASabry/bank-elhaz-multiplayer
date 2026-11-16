@@ -1,0 +1,157 @@
+@media (max-width: 1200px) {
+  .player-corner.corner-lt, .player-corner.corner-lc, .player-corner.corner-lb { transform: translateY(-50%) scale(0.9); }
+  .player-corner.corner-rt, .player-corner.corner-rc, .player-corner.corner-rb { transform: translateY(-50%) scale(0.9); }
+}
+@media (max-width: 800px) {
+  .player-corner { padding: 6px 10px; min-width: 120px; font-size: 0.7rem; gap: 3px; }
+  .player-corner .pc-header { font-size: 0.75rem; gap: 4px; }
+  .player-corner .pc-header img { width: 22px; height: 22px; }
+  .player-corner .pc-money { font-size: 0.75rem; padding: 2px 5px; }
+  .player-corner .pc-status { font-size: 0.6rem; }
+  .player-corner .mini-inv-badge { font-size: 0.55rem; padding: 1px 4px; }
+  .player-corner.corner-lt, .player-corner.corner-lc, .player-corner.corner-lb { transform: translateY(-50%) scale(0.9); }
+  .player-corner.corner-rt, .player-corner.corner-rc, .player-corner.corner-rb { transform: translateY(-50%) scale(0.9); }
+}
+
+/* Mobile/tablet landscape: side panel layout */
+@media (orientation: landscape) and (max-width: 1100px) {
+  #game-container { overflow: hidden; }
+  .game-layout { display: flex; flex-direction: row; align-items: stretch; justify-content: center; gap: 8px; padding-left: 0; padding-right: 0; }
+  #board { flex: 0 0 auto; }
+  #remote-control { display: none !important; }
+  #player-corners { position: relative; top: auto; left: auto; width: auto; height: auto; display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 8px; pointer-events: auto; overflow-y: auto; }
+  .player-corner { position: relative; top: auto !important; left: auto !important; right: auto !important; bottom: auto !important; transform: none !important; min-width: 140px; max-width: 200px; padding: 10px 14px; font-size: 0.85rem; gap: 6px; border-radius: 12px; }
+  .player-corner .pc-header { font-size: 0.9rem; gap: 6px; }
+  .player-corner .pc-header img { width: 30px; height: 30px; }
+  .player-corner .pc-money { font-size: 0.95rem; padding: 3px 8px; }
+  .player-corner .pc-status { font-size: 0.75rem; }
+  .player-corner .mini-inv-badge { font-size: 0.7rem; padding: 3px 6px; }
+  .center-cell { padding: 12px 8px 6px; }
+  .center-cell .center-pfp { width: 80px; height: 80px; }
+  .center-cell .center-dice .die { width: 80px; height: 80px; font-size: 2.8rem; }
+  .center-cell .cc-actions .btn { padding: 14px 32px; font-size: 1.4rem; }
+  .center-cell .cc-timer { font-size: 1.3rem; padding: 6px 14px; }
+  .center-cell .cc-timer .timer-fill { width: 80px; height: 12px; }
+  .center-cell .turn-banner { font-size: 1.5rem; }
+  .cell { font-size: 0.75rem; }
+  .cell .cell-city { font-size: 0.7rem; padding: 8px 6px; }
+  .cell .cell-price-section { font-size: 0.65rem; padding: 4px 6px; }
+  .cell .players-here .ptoken { width: 22px; height: 22px; }
+  .deck-pile .card-back { font-size: 2.6rem; }
+  #build-mgmt { max-height: 80px; font-size: 0.7rem; }
+  .modal-box { max-width: 360px; padding: 14px; }
+  .center-cell #toast-container { max-height: 36px; }
+  .toast { font-size: 0.55rem; padding: 3px 6px; }
+}
+@media (orientation: landscape) and (max-height: 450px) {
+  .player-corner { min-width: 80px; max-width: 120px; font-size: 0.5rem; padding: 3px 6px; gap: 2px; }
+  .player-corner .pc-header { font-size: 0.55rem; gap: 2px; }
+  .player-corner .pc-header img { width: 16px; height: 16px; }
+  .player-corner .pc-money { font-size: 0.55rem; padding: 1px 3px; }
+  .center-cell { padding: 4px 3px 2px; }
+  .center-cell .center-pfp { width: 45px; height: 45px; }
+  .center-cell .center-dice .die { width: 45px; height: 45px; font-size: 1.6rem; }
+  .center-cell .cc-actions .btn { padding: 8px 18px; font-size: 0.9rem; }
+  .center-cell .cc-timer { font-size: 0.8rem; padding: 2px 8px; }
+  .center-cell .cc-timer .timer-fill { width: 45px; height: 6px; }
+  .cell { font-size: 0.4rem; }
+  .cell .cell-city { font-size: 0.35rem; }
+  .cell .cell-price-section { font-size: 0.35rem; }
+  .deck-pile .card-back { font-size: 1.7rem; }
+}
+
+/* Extra small portrait for tiny phones */
+@media (orientation: portrait) and (max-width: 420px) {
+  #remote-control .rc-row .btn { padding: 14px 8px; font-size: 1rem; }
+  #remote-control .rc-row.rc-secondary .btn { font-size: 0.85rem; padding: 12px 6px; }
+}
+
+/* Mobile portrait: board at top, remote control below, player cards at bottom */
+@media (orientation: portrait) and (max-width: 600px) {
+  #game-container { overflow-y: auto; overflow-x: hidden; height: auto; min-height: 100vh; }
+  .game-layout { display: flex; flex-direction: column; align-items: center; overflow-y: visible; padding-top: 0; padding-left: 0; padding-right: 0; height: auto; }
+  #board { position: relative; top: auto; left: auto; transform-origin: top center; margin: 60px auto 0; z-index: 1; flex-shrink: 0; }
+  #remote-control { display: block !important; flex-shrink: 0; width: 100%; max-width: 400px; }
+  #rc-status { display: flex !important; }
+  .center-cell #center-dice-area { display: none !important; }
+  #rc-turn-banner, #rc-timer-bar { display: none !important; }
+  #rc-dice-area { margin: 4px 0; display: flex; gap: 6px; justify-content: center; align-items: center; flex-wrap: wrap; }
+  #rc-dice-area .die { width: 70px !important; height: 70px !important; font-size: 2.3rem !important; }
+  #player-corners { flex-shrink: 0; position: relative; width: 100%; height: auto; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; padding: 6px 4px; top: auto; left: auto; pointer-events: auto; }
+  .player-corner { position: relative; top: auto !important; left: auto !important; right: auto !important; bottom: auto !important; transform: none !important; min-width: 0; max-width: none; width: calc(50% - 6px); padding: 5px 8px; font-size: 0.65rem; gap: 3px; border-radius: 8px; }
+  .player-corner .pc-header { font-size: 0.7rem; gap: 3px; }
+  .player-corner .pc-header img { width: 22px; height: 22px; }
+  .player-corner .pc-money { font-size: 0.7rem; padding: 2px 5px; }
+  .player-corner .pc-status { font-size: 0.5rem; }
+  .player-corner .mini-inv-badge { font-size: 0.5rem; padding: 2px 4px; }
+  .center-cell { padding: 12px 6px 6px; }
+  .center-cell .center-pfp { width: 100px; height: 100px; margin-bottom: 6px; }
+  .center-cell .turn-banner { font-size: 1.6rem; font-weight: 900; }
+  .center-cell .cc-timer { font-size: 1.4rem; padding: 6px 12px; }
+  .center-cell .cc-timer .timer-fill { width: 100px; height: 12px; }
+  .center-cell .center-dice .die { width: 95px; height: 95px; font-size: 3.2rem; }
+  .center-cell .cc-actions { display: none !important; }
+  .center-cell .cc-prison { display: none !important; }
+  .cell { font-size: 1.1rem; font-weight: 700; }
+  .cell .cell-city { font-size: 0.9rem; font-weight: 700; }
+  .cell .cell-price-section { font-size: 0.85rem; font-weight: 700; }
+  .cell .players-here .ptoken { width: 30px; height: 30px; }
+  .cell .players-here .ptoken.moving { width: 36px; height: 36px; }
+  .cell.deck_trigger .deck-label, .cell.dual_deck_trigger .deck-label { font-size: 1.8rem; line-height: 1.2; }
+  .cell.deck_trigger .deck-label img, .cell.dual_deck_trigger .deck-label img { width: 24px !important; height: 24px !important; }
+  .p13 .deck-label, .p30 .deck-label { font-size: 2.6rem; }
+  .p11 .deck-label { font-size: 2.6rem; }
+  .deck-pile .card-back { font-size: 1.6rem; }
+  #build-mgmt { max-height: 80px; font-size: 0.6rem; position: relative; width: 100%; }
+  .modal-box { max-width: 320px; padding: 12px; }
+  .modal-box h2 { font-size: 1rem; }
+  .modal-box p { font-size: 0.85rem; }
+  .modal-box .btn { padding: 7px 16px; font-size: 0.8rem; }
+  .toast { font-size: 0.9rem; padding: 4px 12px; }
+  .trade-panels { flex-direction: column; }
+  .trade-panel { min-height: 120px; }
+  #btn-players-float { top: 4px; right: 4px; padding: 5px 10px; font-size: 0.75rem; }
+  .moving-car { display: block !important; }
+}
+
+  /* Awkward in-between: use portrait mobile layout */
+@media (min-width: 601px) and (max-width: 900px) {
+  #game-container { overflow-y: auto; overflow-x: hidden; height: auto; min-height: 100vh; }
+  .game-layout { display: flex; flex-direction: column; align-items: center; overflow-y: visible; padding-top: 0; padding-left: 0; padding-right: 0; height: auto; }
+  #board { position: relative; top: auto; left: auto; transform-origin: top center; margin: 60px auto 0; z-index: 1; flex-shrink: 0; }
+  #remote-control { display: block !important; flex-shrink: 0; width: 100%; max-width: 400px; }
+  #rc-status { display: flex !important; }
+  .center-cell #center-dice-area { display: none !important; }
+  #rc-turn-banner, #rc-timer-bar { display: none !important; }
+  #rc-dice-area { margin: 4px 0; display: flex; gap: 6px; justify-content: center; align-items: center; flex-wrap: wrap; }
+  #rc-dice-area .die { width: 70px !important; height: 70px !important; font-size: 2.3rem !important; }
+  #player-corners { flex-shrink: 0; position: relative; width: 100%; height: auto; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; padding: 6px 4px; top: auto; left: auto; pointer-events: auto; }
+  .player-corner { position: relative; top: auto !important; left: auto !important; right: auto !important; bottom: auto !important; transform: none !important; min-width: 0; max-width: none; width: calc(50% - 6px); padding: 5px 8px; font-size: 0.65rem; gap: 3px; border-radius: 8px; }
+  .player-corner .pc-header { font-size: 0.7rem; gap: 3px; }
+  .player-corner .pc-header img { width: 22px; height: 22px; }
+  .player-corner .pc-money { font-size: 0.7rem; padding: 2px 5px; }
+  .player-corner .pc-status { font-size: 0.5rem; }
+  .player-corner .mini-inv-badge { font-size: 0.5rem; padding: 2px 4px; }
+  .center-cell { padding: 12px 6px 6px; }
+  .center-cell .center-pfp { width: 100px; height: 100px; margin-bottom: 6px; }
+  .center-cell .turn-banner { font-size: 1.6rem; font-weight: 900; }
+  .center-cell .cc-timer { font-size: 1.4rem; padding: 6px 12px; }
+  .center-cell .cc-timer .timer-fill { width: 100px; height: 12px; }
+  .center-cell .center-dice .die { width: 95px; height: 95px; font-size: 3.2rem; }
+  .center-cell .cc-actions { display: none !important; }
+  .center-cell .cc-prison { display: none !important; }
+  .cell { font-size: 1.1rem; font-weight: 700; }
+  .cell .cell-city { font-size: 0.9rem; font-weight: 700; }
+  .cell .cell-price-section { font-size: 0.85rem; font-weight: 700; }
+  .cell .players-here .ptoken { width: 30px; height: 30px; }
+  .cell .players-here .ptoken.moving { width: 36px; height: 36px; }
+  .cell.deck_trigger .deck-label, .cell.dual_deck_trigger .deck-label { font-size: 1.8rem; line-height: 1.2; }
+  .cell.deck_trigger .deck-label img, .cell.dual_deck_trigger .deck-label img { width: 24px !important; height: 24px !important; }
+  .p13 .deck-label, .p30 .deck-label { font-size: 2.6rem; }
+  .p11 .deck-label { font-size: 2.6rem; }
+  .deck-pile .card-back { font-size: 1.6rem; }
+  #build-mgmt { max-height: 80px; font-size: 0.6rem; position: relative; width: 100%; }
+  .modal-box { max-width: 320px; padding: 12px; }
+  .toast { font-size: 0.9rem; padding: 4px 12px; }
+  .moving-car { display: block !important; }
+}
